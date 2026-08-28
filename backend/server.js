@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const Transaction = require("./models/Transaction");
 const classifyFailure = require("./services/classifyFailure");
+const getRetryStrategy = require("./services/getRetryStrategy");
+const startRetryScheduler = require("./services/retryScheduler");
 const app = express();
 const port = process.env.PORT || 3000;
 // MongoDB connection
@@ -12,6 +14,8 @@ mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
     console.log("MongoDB connected");
+
+    startRetryScheduler();
   })
   .catch((error) => {
     console.log("MongoDB connection failed:", error.message);
@@ -44,6 +48,14 @@ app.post(
       if (event.event === "payment.failed") {
         const payment = event.payload.payment.entity;
         const category = classifyFailure(payment);
+        const retryStrategy = getRetryStrategy(category);
+let nextRetryAt = null;
+
+if (retryStrategy.shouldRetry) {
+  nextRetryAt = new Date(
+    Date.now() + retryStrategy.delayMinutes * 60 * 1000
+  );
+}
 
 console.log("Failure classified as:", category);
 const existingTransaction = await Transaction.findOne({
@@ -65,7 +77,9 @@ if (existingTransaction) {
   amount: payment.amount / 100,
   status: payment.status,
   failureReason: payment.error_description || "Unknown failure",
-  category: category
+  category: category,
+    nextRetryAt: nextRetryAt
+
 });
 
         console.log("Transaction saved:", transaction._id);
