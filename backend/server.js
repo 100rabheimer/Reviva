@@ -4,7 +4,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const Transaction = require("./models/Transaction");
-
+const classifyFailure = require("./services/classifyFailure");
 const app = express();
 const port = process.env.PORT || 3000;
 // MongoDB connection
@@ -43,6 +43,9 @@ app.post(
 
       if (event.event === "payment.failed") {
         const payment = event.payload.payment.entity;
+        const category = classifyFailure(payment);
+
+console.log("Failure classified as:", category);
 const existingTransaction = await Transaction.findOne({
   razorpayPaymentId: payment.id
 });
@@ -55,14 +58,15 @@ if (existingTransaction) {
     duplicate: true
   });
 }
-        const transaction = await Transaction.create({
-          razorpayPaymentId: payment.id,
-          customerName: payment.notes?.customerName || "Unknown",
-          customerEmail: payment.email || "unknown@example.com",
-          amount: payment.amount / 100,
-          status: payment.status,
-          failureReason: payment.error_description || "Unknown failure"
-        });
+       const transaction = await Transaction.create({
+  razorpayPaymentId: payment.id,
+  customerName: payment.notes?.customerName || "Unknown",
+  customerEmail: payment.email || "unknown@example.com",
+  amount: payment.amount / 100,
+  status: payment.status,
+  failureReason: payment.error_description || "Unknown failure",
+  category: category
+});
 
         console.log("Transaction saved:", transaction._id);
       }
@@ -79,15 +83,12 @@ if (existingTransaction) {
     }
   }
 );
-
 // Normal JSON middleware for baaki routes
 app.use(express.json());
-
 // Health route
 app.get("/", (req, res) => {
   res.send("Reviva API is working");
 });
-
 app.listen(port, () => {
   console.log(`Server is live at http://localhost:${port}`);
 });
