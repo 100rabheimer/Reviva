@@ -7,6 +7,8 @@ const Transaction = require("./models/Transaction");
 const classifyFailure = require("./services/classifyFailure");
 const getRetryStrategy = require("./services/getRetryStrategy");
 const startRetryScheduler = require("./services/retryScheduler");
+const transactionRoutes = require("./routes/transactionRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 const app = express();
 const port = process.env.PORT || 3000;
 // MongoDB connection
@@ -99,7 +101,9 @@ if (existingTransaction) {
 );
 // Normal JSON middleware for baaki routes
 app.use(express.json());
+app.use("/api/dashboard", dashboardRoutes);
 // Health route
+app.use("/api/transactions", transactionRoutes);
 app.get("/", (req, res) => {
   res.send("Reviva API is working");
 });
