@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const cors = require("cors");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const Transaction = require("./models/Transaction");
@@ -9,7 +10,14 @@ const getRetryStrategy = require("./services/getRetryStrategy");
 const startRetryScheduler = require("./services/retryScheduler");
 const transactionRoutes = require("./routes/transactionRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+
 const app = express();
+app.use(
+  cors({
+    origin: "http://localhost:5173"
+  })
+);
+
 const port = process.env.PORT || 3000;
 // MongoDB connection
 mongoose
