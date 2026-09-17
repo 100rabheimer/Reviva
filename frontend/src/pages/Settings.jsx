@@ -20,10 +20,13 @@ import WebhookSimulatorModal from "../components/WebhookSimulatorModal";
 import { fetchSettings, updateSettings, fetchRetryRules, updateRetryRules } from "../services/api";
 import usePageAnimation from "../hooks/usePageAnimation";
 import { useToast } from "../context/ToastContext";
+import { useTheme } from "../context/ThemeContext";
 
 function Settings() {
   const pageRef = useRef(null);
   const { addToast } = useToast();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   usePageAnimation(pageRef);
 
   const [settings, setSettingsState] = useState({
@@ -94,22 +97,25 @@ function Settings() {
   };
 
   return (
-    <div className="flex flex-1 flex-col min-w-0 bg-slate-50 min-h-screen">
+    <div className={`flex min-h-screen min-w-0 flex-1 flex-col ${
+      isDark ? "bg-black text-white" : "bg-slate-50 text-slate-900"
+    }`}>
       <Header onOpenWebhookModal={() => setIsWebhookModalOpen(true)} />
 
       <main ref={pageRef} className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Header */}
-        <div className="animate-section flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5">
+        <div className={`animate-section flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center sm:justify-between ${
+          isDark ? "border-slate-800" : "border-slate-200"
+        }`}>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-bold text-amber-400">
-                Phase 2 Rules & AI Config
-              </span>
-            </div>
-            <h1 className="page-title mt-1 text-2xl font-extrabold text-slate-900 sm:text-3xl tracking-tight">
+            <h1 className={`page-title text-2xl font-extrabold tracking-tight sm:text-3xl ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}>
               Merchant Settings & Retry Rules
             </h1>
-            <p className="page-subtitle mt-1 text-xs sm:text-sm text-slate-500">
+            <p className={`page-subtitle mt-1 text-xs sm:text-sm ${
+              isDark ? "text-slate-300" : "text-slate-500"
+            }`}>
               Configure automated retry delays per failure category, brand outreach tone, and Razorpay API credentials.
             </p>
           </div>
@@ -125,13 +131,17 @@ function Settings() {
         </div>
 
         {/* SECTION 1: MERCHANT RETRY RULES CONFIGURATION TABLE (Phase 2 Core Requirement) */}
-        <section className="animate-section rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+        <section className={`animate-section space-y-4 rounded-2xl border p-5 shadow-sm ${
+          isDark ? "border-slate-800 bg-black" : "border-[#a8dceb] bg-[#d9f3fb]"
+        }`}>
+          <div className={`flex items-center justify-between border-b pb-4 ${
+            isDark ? "border-slate-800" : "border-[#a8dceb]"
+          }`}>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
                 Category-based Retry Rules Configuration
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className={`text-xs ${isDark ? "text-slate-300" : "text-slate-600"}`}>
                 Define retry delays, auto-retry toggles, and max retry limits for each failure category
               </p>
             </div>
@@ -142,7 +152,9 @@ function Settings() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-slate-200 bg-slate-50 text-slate-500 uppercase font-semibold">
+              <thead className={`border-b uppercase font-semibold ${
+                isDark ? "border-slate-800 bg-black text-slate-300" : "border-[#a8dceb] bg-[#d9f3fb] text-slate-600"
+              }`}>
                 <tr>
                   <th className="px-4 py-3">Failure Category</th>
                   <th className="px-4 py-3">Auto Retry</th>
@@ -151,10 +163,10 @@ function Settings() {
                   <th className="px-4 py-3">Strategy Description</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium">
+              <tbody className={`divide-y font-medium ${isDark ? "divide-slate-800" : "divide-[#a8dceb]"}`}>
                 {retryRules.map((rule) => (
-                  <tr key={rule.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3.5 font-bold text-slate-900">
+                  <tr key={rule.id} className={isDark ? "hover:bg-slate-900" : "hover:bg-[#eefaff]"}>
+                    <td className={`px-4 py-3.5 font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
                       {rule.categoryLabel}
                     </td>
 
@@ -181,7 +193,9 @@ function Settings() {
                         value={rule.retryDelayHours}
                         disabled={!rule.autoRetryEnabled}
                         onChange={(e) => handleUpdateRuleDelay(rule.id, e.target.value)}
-                        className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-800 outline-none focus:border-slate-800 disabled:opacity-40"
+                        className={`rounded-lg border px-2.5 py-1 text-xs font-semibold outline-none focus:border-sky-500 disabled:opacity-40 ${
+                          isDark ? "border-slate-800 bg-black text-white" : "border-[#a8dceb] bg-[#eefaff] text-slate-800"
+                        }`}
                       >
                         <option value="0">Immediate (0h)</option>
                         <option value="1">1 Hour</option>
@@ -192,11 +206,11 @@ function Settings() {
                       </select>
                     </td>
 
-                    <td className="px-4 py-3.5 font-bold text-slate-700">
+                    <td className={`px-4 py-3.5 font-bold ${isDark ? "text-slate-200" : "text-slate-700"}`}>
                       {rule.maxAttempts} Attempts
                     </td>
 
-                    <td className="px-4 py-3.5 text-slate-500 text-[11px]">
+                    <td className={`px-4 py-3.5 text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>
                       {rule.description}
                     </td>
                   </tr>
@@ -209,14 +223,18 @@ function Settings() {
         {/* SECTION 2: BRAND TONE & LLM AI CONFIGURATION */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Brand Tone & Channels */}
-          <section className="animate-section rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+          <section className={`animate-section space-y-4 rounded-2xl border p-5 shadow-sm ${
+            isDark ? "border-slate-800 bg-black" : "border-[#a8dceb] bg-[#d9f3fb]"
+          }`}>
+            <h2 className={`border-b pb-3 text-base font-bold ${
+              isDark ? "border-slate-800 text-white" : "border-[#a8dceb] text-slate-900"
+            }`}>
               Brand Tone & Outreach Channels
             </h2>
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
+                <label className={`mb-1 block font-bold ${isDark ? "text-slate-200" : "text-slate-700"}`}>
                   Default GenAI Brand Outreach Tone
                 </label>
                 <select
@@ -224,7 +242,9 @@ function Settings() {
                   onChange={(e) =>
                     setSettingsState({ ...settings, brandTone: e.target.value })
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-slate-800"
+                  className={`w-full rounded-xl border px-3 py-2.5 text-xs font-semibold outline-none focus:border-sky-500 ${
+                    isDark ? "border-slate-800 bg-black text-white" : "border-[#a8dceb] bg-[#eefaff] text-slate-900"
+                  }`}
                 >
                   <option value="Friendly & Empathetic">Friendly & Empathetic</option>
                   <option value="Professional & Direct">Professional & Direct</option>
@@ -234,7 +254,7 @@ function Settings() {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-2">
+                <label className={`mb-2 block font-bold ${isDark ? "text-slate-200" : "text-slate-700"}`}>
                   Active Outreach Channels:
                 </label>
                 <div className="space-y-2">
@@ -254,7 +274,7 @@ function Settings() {
                         }
                         className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
                       />
-                      <span className="font-semibold text-slate-800 capitalize">{ch} Outreach</span>
+                      <span className={`font-semibold capitalize ${isDark ? "text-slate-200" : "text-slate-800"}`}>{ch} Outreach</span>
                     </label>
                   ))}
                 </div>
@@ -263,14 +283,18 @@ function Settings() {
           </section>
 
           {/* Razorpay Webhook Configuration */}
-          <section className="animate-section rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
-            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+          <section className={`animate-section space-y-4 rounded-2xl border p-5 shadow-sm ${
+            isDark ? "border-slate-800 bg-black" : "border-[#a8dceb] bg-[#d9f3fb]"
+          }`}>
+            <h2 className={`border-b pb-3 text-base font-bold ${
+              isDark ? "border-slate-800 text-white" : "border-[#a8dceb] text-slate-900"
+            }`}>
               Razorpay Webhook Integration
             </h2>
 
             <div className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
+                <label className={`mb-1 block font-bold ${isDark ? "text-slate-200" : "text-slate-700"}`}>
                   Webhook Endpoint URL
                 </label>
                 <div className="flex gap-2">
@@ -278,11 +302,15 @@ function Settings() {
                     type="text"
                     readOnly
                     value={settings.webhookEndpointUrl}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-700 outline-none"
+                    className={`w-full rounded-xl border px-3 py-2 text-xs font-mono outline-none ${
+                      isDark ? "border-slate-800 bg-black text-slate-200" : "border-[#a8dceb] bg-[#eefaff] text-slate-700"
+                    }`}
                   />
                   <button
                     onClick={handleCopyWebhookUrl}
-                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 font-bold text-slate-700 hover:bg-slate-100"
+                    className={`rounded-xl border px-3 py-2 font-bold ${
+                      isDark ? "border-slate-800 bg-black text-slate-200 hover:bg-slate-900" : "border-[#a8dceb] bg-[#eefaff] text-slate-700 hover:bg-[#d9f3fb]"
+                    }`}
                   >
                     {copiedUrl ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                   </button>
@@ -302,7 +330,9 @@ function Settings() {
                       razorpayWebhookSecret: e.target.value,
                     })
                   }
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-900 outline-none focus:border-slate-800"
+                  className={`w-full rounded-xl border px-3 py-2 text-xs font-mono outline-none focus:border-sky-500 ${
+                    isDark ? "border-slate-800 bg-black text-white" : "border-[#a8dceb] bg-[#eefaff] text-slate-900"
+                  }`}
                 />
               </div>
             </div>

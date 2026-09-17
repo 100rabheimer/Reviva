@@ -16,6 +16,7 @@ function Header({ onOpenWebhookModal, search, setSearch }) {
   const { user, logout, toggleRazorpayOAuth } = useAuth();
   const { addToast } = useToast();
   const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
 
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -42,7 +43,9 @@ function Header({ onOpenWebhookModal, search, setSearch }) {
   ];
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-sky-100 bg-white/90 px-4 sm:px-6 lg:px-8 backdrop-blur-md transition-colors duration-200">
+    <header className={`sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b px-4 sm:px-6 lg:px-8 backdrop-blur-md transition-colors duration-200 ${
+      isDark ? "border-[#12395b] bg-[#06233d]" : "border-sky-100 bg-white/90"
+    }`}>
       {/* Search Input */}
       <div className="flex flex-1 items-center max-w-md">
         <div className="relative w-full">
@@ -52,7 +55,11 @@ function Header({ onOpenWebhookModal, search, setSearch }) {
             placeholder="Search payment ID, customer name, email..."
             value={search || ""}
             onChange={(e) => setSearch && setSearch(e.target.value)}
-            className="w-full rounded-xl border border-sky-200 bg-[#f4fbff] py-2 pl-9 pr-4 text-xs sm:text-sm text-sky-950 outline-none transition focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-200"
+            className={`w-full rounded-xl border py-2 pl-9 pr-4 text-xs sm:text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200 ${
+              isDark
+                ? "border-[#17476e] bg-[#041a2e] text-white placeholder:text-slate-400 focus:bg-[#041a2e]"
+                : "border-sky-200 bg-[#f4fbff] text-sky-950 focus:bg-white"
+            }`}
           />
         </div>
       </div>
@@ -103,7 +110,11 @@ function Header({ onOpenWebhookModal, search, setSearch }) {
               "info"
             );
           }}
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-sky-200 bg-[#edfaff] text-sky-700 hover:bg-sky-100 transition active:scale-95"
+          className={`flex h-9 w-9 items-center justify-center rounded-xl border transition active:scale-95 ${
+            isDark
+              ? "border-[#17476e] bg-[#06233d] text-slate-200 hover:bg-[#0b3152]"
+              : "border-sky-200 bg-[#edfaff] text-sky-700 hover:bg-sky-100"
+          }`}
           title={theme === "dark" ? "Switch to Day Mode" : "Switch to Dark Mode"}
           aria-label="Toggle Mode"
         >
@@ -121,7 +132,11 @@ function Header({ onOpenWebhookModal, search, setSearch }) {
               setShowNotifications(!showNotifications);
               setShowProfileMenu(false);
             }}
-            className="relative rounded-xl border border-sky-100 p-2 text-slate-600 hover:bg-sky-50 transition"
+            className={`relative rounded-xl border p-2 transition ${
+              isDark
+                ? "border-[#17476e] text-slate-200 hover:bg-[#0b3152]"
+                : "border-sky-100 text-slate-600 hover:bg-sky-50"
+            }`}
           >
             <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-950" />
@@ -158,7 +173,9 @@ function Header({ onOpenWebhookModal, search, setSearch }) {
               setShowProfileMenu(!showProfileMenu);
               setShowNotifications(false);
             }}
-            className="flex items-center gap-2 rounded-xl border border-sky-100 p-1.5 hover:bg-sky-50 transition"
+            className={`flex items-center gap-2 rounded-xl border p-1.5 transition ${
+              isDark ? "border-[#17476e] hover:bg-[#0b3152]" : "border-sky-100 hover:bg-sky-50"
+            }`}
           >
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-600 text-xs font-bold text-white">
               {user?.name?.[0] || "M"}

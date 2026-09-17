@@ -28,6 +28,7 @@ import WebhookSimulatorModal from "../components/WebhookSimulatorModal";
 import StatCard from "../components/StatCard";
 import usePageAnimation from "../hooks/usePageAnimation";
 import { useToast } from "../context/ToastContext";
+import { useTheme } from "../context/ThemeContext";
 
 const CHANNEL_PERFORMANCE_DATA = [
   { channel: "Email", sent: 142, opened: 118, clicked: 89, recovered: 72, rate: "80.8%" },
@@ -53,6 +54,8 @@ const MONTHLY_REVENUE_COMPARE = [
 function Analytics() {
   const pageRef = useRef(null);
   const { addToast } = useToast();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   usePageAnimation(pageRef);
 
   const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
@@ -63,23 +66,23 @@ function Analytics() {
   };
 
   return (
-    <div className="flex flex-1 flex-col min-w-0 bg-slate-50 min-h-screen">
+    <div className={`flex min-h-screen min-w-0 flex-1 flex-col ${
+      isDark ? "bg-black text-white" : "bg-slate-50 text-slate-900"
+    }`}>
       <Header onOpenWebhookModal={() => setIsWebhookModalOpen(true)} />
 
       <main ref={pageRef} className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Title Header */}
         <div className="animate-section flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-full bg-indigo-100 px-2.5 py-0.5 text-xs font-bold text-indigo-800">
-                Phase 2 Core Module
-              </span>
-              <span className="text-xs text-slate-500 font-medium">Deep AI Analytics</span>
-            </div>
-            <h1 className="page-title mt-1 text-2xl font-extrabold text-slate-900 sm:text-3xl tracking-tight">
+            <h1 className={`page-title text-2xl font-extrabold tracking-tight sm:text-3xl ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}>
               Full Analytics & Revenue Intelligence
             </h1>
-            <p className="page-subtitle mt-1 text-xs sm:text-sm text-slate-500">
+            <p className={`page-subtitle mt-1 text-xs sm:text-sm ${
+              isDark ? "text-slate-300" : "text-slate-500"
+            }`}>
               Comprehensive breakdown of recovered revenue, channel efficiency, and LLM classification performance.
             </p>
           </div>
@@ -103,6 +106,7 @@ function Analytics() {
             trend="+32.1%"
             subtitle="Cumulative saved revenue"
             icon={DollarSign}
+            className={isDark ? "" : "!border-[#a8dceb] !bg-[#d9f3fb]"}
           />
           <StatCard
             label="Churn Prevention Rate"
@@ -110,6 +114,7 @@ function Analytics() {
             trend="+5.2%"
             subtitle="Subscribers retained after failure"
             icon={TrendingUp}
+            className={isDark ? "" : "!border-[#a8dceb] !bg-[#d9f3fb]"}
           />
           <StatCard
             label="Avg. Recovery Time"
@@ -117,6 +122,7 @@ function Analytics() {
             trend="-45 mins"
             subtitle="Time to payment capture"
             icon={Layers}
+            className={isDark ? "" : "!border-[#a8dceb] !bg-[#d9f3fb]"}
           />
           <StatCard
             label="AI Classification Precision"
@@ -124,12 +130,15 @@ function Analytics() {
             trend="+2.1%"
             subtitle="LLM rule mapping accuracy"
             icon={Sparkles}
+            className={isDark ? "" : "!border-[#a8dceb] !bg-[#d9f3fb]"}
           />
         </div>
 
         {/* Chart Row 1: Recovered vs Lost Monthly Stacked Bar & Channel Performance */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <section className="animate-section lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+          <section className={`animate-section lg:col-span-2 space-y-4 rounded-2xl border p-5 shadow-sm ${
+            isDark ? "border-slate-800 bg-black" : "border-[#a8dceb] bg-[#d9f3fb]"
+          }`}>
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h2 className="text-base font-bold text-slate-900">
@@ -160,7 +169,9 @@ function Analytics() {
           </section>
 
           {/* AI Confidence Distribution */}
-          <section className="animate-section rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+          <section className={`animate-section space-y-4 rounded-2xl border p-5 shadow-sm ${
+            isDark ? "border-slate-800 bg-black" : "border-[#a8dceb] bg-[#d9f3fb]"
+          }`}>
             <div className="border-b border-slate-100 pb-3">
               <h2 className="text-base font-bold text-slate-900">
                 LLM Confidence Score Distribution
@@ -185,7 +196,9 @@ function Analytics() {
         </div>
 
         {/* Channel Performance Matrix Table */}
-        <section className="animate-section rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+        <section className={`animate-section space-y-4 rounded-2xl border p-5 shadow-sm ${
+          isDark ? "border-slate-800 bg-black" : "border-[#a8dceb] bg-[#d9f3fb]"
+        }`}>
           <div className="border-b border-slate-100 pb-4">
             <h2 className="text-base font-bold text-slate-900">
               Outreach Channel Conversion Matrix (Email vs SMS vs WhatsApp)
@@ -197,7 +210,9 @@ function Analytics() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-slate-200 bg-slate-50 text-slate-500 uppercase font-semibold">
+              <thead className={`border-b uppercase font-semibold ${
+                isDark ? "border-slate-800 bg-black text-slate-300" : "border-[#a8dceb] bg-[#d9f3fb] text-slate-600"
+              }`}>
                 <tr>
                   <th className="px-4 py-3">Channel</th>
                   <th className="px-4 py-3">Outreach Messages Sent</th>
@@ -209,8 +224,8 @@ function Analytics() {
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {CHANNEL_PERFORMANCE_DATA.map((row) => (
-                  <tr key={row.channel} className="hover:bg-slate-50">
-                    <td className="px-4 py-3.5 font-bold text-slate-900">{row.channel}</td>
+                  <tr key={row.channel} className={isDark ? "hover:bg-slate-900" : "hover:bg-[#eefaff]"}>
+                    <td className={`px-4 py-3.5 font-bold ${isDark ? "text-white" : "text-slate-900"}`}>{row.channel}</td>
                     <td className="px-4 py-3.5">{row.sent}</td>
                     <td className="px-4 py-3.5">{row.opened}</td>
                     <td className="px-4 py-3.5">{row.clicked}</td>

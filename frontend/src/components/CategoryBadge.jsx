@@ -6,7 +6,7 @@ function CategoryBadge({ category }) {
     },
     CARD_EXPIRED: {
       label: "Card Expired",
-      styles: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-500/10 dark:text-sky-200 dark:border-sky-300/30",
+      styles: "bg-orange-500 text-white border-orange-700 dark:bg-orange-500/15 dark:text-orange-200 dark:border-orange-300/40",
     },
     AUTHENTICATION_FAILURE: {
       label: "OTP / Auth Failed",

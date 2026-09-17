@@ -17,8 +17,8 @@ function StatusBadge({ status }) {
     },
     action_needed: {
       label: "Action Needed",
-      styles: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-sky-500/10 dark:text-sky-200 dark:border-sky-300/30",
-      dot: "bg-indigo-500 dark:bg-sky-300",
+      styles: "bg-purple-600 text-white border-purple-800 dark:bg-purple-500/15 dark:text-purple-200 dark:border-purple-300/40",
+      dot: "bg-purple-600 dark:bg-purple-300",
     },
     failed: {
       label: "Failed",

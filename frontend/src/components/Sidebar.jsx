@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 import {
   LayoutDashboard,
   ReceiptText,
@@ -12,6 +13,8 @@ import {
 
 function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   const menuItems = [
     {
@@ -30,13 +33,13 @@ function Sidebar() {
       name: "Analytics",
       path: "/analytics",
       icon: BarChart3,
-      badge: "Phase 2",
+      badge: null,
     },
     {
       name: "A/B Messages",
       path: "/messages",
       icon: MessageSquareCode,
-      badge: "GenAI",
+      badge: null,
     },
     {
       name: "Settings",
@@ -48,13 +51,17 @@ function Sidebar() {
 
   return (
     <aside
-      className={`relative min-h-screen shrink-0 border-r border-sky-100 bg-[#f8fcff] text-slate-700 transition-all duration-300 ease-in-out ${
+      className={`relative min-h-screen shrink-0 border-r transition-all duration-300 ease-in-out ${
+        isDark ? "border-[#12395b] bg-[#06233d] text-slate-200" : "border-sky-100 bg-[#f8fcff] text-slate-700"
+      } ${
         collapsed ? "w-20" : "w-64"
       }`}
     >
       {/* Brand Header with Logo */}
       <div
-        className={`flex h-20 items-center border-b border-sky-100 ${
+        className={`flex h-20 items-center border-b ${
+          isDark ? "border-[#12395b]" : "border-sky-100"
+        } ${
           collapsed ? "justify-center" : "justify-between px-4"
         }`}
       >
@@ -77,7 +84,11 @@ function Sidebar() {
         <button
           type="button"
           onClick={() => setCollapsed((prev) => !prev)}
-          className={`flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-600 hover:bg-sky-200 hover:text-sky-700 transition ${
+          className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${
+            isDark
+              ? "bg-[#0b3152] text-slate-200 hover:bg-[#12436c] hover:text-white"
+              : "bg-sky-100 text-sky-600 hover:bg-sky-200 hover:text-sky-700"
+          } ${
             collapsed ? "mt-2" : ""
           }`}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -106,7 +117,11 @@ function Sidebar() {
                   "group relative flex h-11 items-center rounded-xl font-medium text-xs transition-all duration-200",
                   collapsed ? "w-11 justify-center" : "w-full justify-between px-3.5",
                   isActive
-                    ? "bg-gradient-to-r from-sky-500/15 to-cyan-400/10 text-sky-700 border border-sky-200 shadow-sm font-bold"
+                    ? isDark
+                      ? "bg-[#0b3152] text-white border border-[#1a527f] shadow-sm font-bold"
+                      : "bg-gradient-to-r from-sky-500/15 to-cyan-400/10 text-sky-700 border border-sky-200 shadow-sm font-bold"
+                    : isDark
+                    ? "text-slate-300 hover:bg-[#0b3152] hover:text-white"
                     : "text-slate-500 hover:bg-sky-50 hover:text-sky-700",
                 ].join(" ")
               }

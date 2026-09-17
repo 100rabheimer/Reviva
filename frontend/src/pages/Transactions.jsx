@@ -21,11 +21,14 @@ import WebhookSimulatorModal from "../components/WebhookSimulatorModal";
 import { fetchTransactions } from "../services/api";
 import usePageAnimation from "../hooks/usePageAnimation";
 import { useToast } from "../context/ToastContext";
+import { useTheme } from "../context/ThemeContext";
 
 function Transactions() {
   const navigate = useNavigate();
   const pageRef = useRef(null);
   const { addToast } = useToast();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   usePageAnimation(pageRef);
 
@@ -121,7 +124,9 @@ function Transactions() {
   };
 
   return (
-    <div className="flex flex-1 flex-col min-w-0 bg-slate-50 min-h-screen">
+    <div className={`flex min-h-screen min-w-0 flex-1 flex-col ${
+      isDark ? "bg-black text-white" : "bg-slate-50 text-slate-900"
+    }`}>
       <Header
         onOpenWebhookModal={() => setIsWebhookModalOpen(true)}
         search={search}
@@ -130,20 +135,21 @@ function Transactions() {
 
       <main ref={pageRef} className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Title Header */}
-        <div className="animate-section flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5">
+        <div className={`animate-section flex flex-col gap-4 border-b pb-5 sm:flex-row sm:items-center sm:justify-between ${
+          isDark ? "border-slate-800" : "border-slate-200"
+        }`}>
           <div>
-            <h1 className="page-title text-2xl font-extrabold text-slate-900 sm:text-3xl tracking-tight">
+            <h1 className={`page-title text-2xl font-extrabold tracking-tight sm:text-3xl ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}>
               Failed Transactions Ledger
             </h1>
-            <p className="page-subtitle mt-1 text-xs sm:text-sm text-slate-500">
-              Filter, inspect, and trigger GenAI recovery workflows on captured payment failures.
-            </p>
           </div>
 
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportCSV}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-100"
+              className="inline-flex items-center gap-2 rounded-xl border border-[#c5e8f2] bg-[#eaf8fc] px-4 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-[#f5fcff]"
             >
               <Download className="h-4 w-4" />
               <span>Export CSV</span>
@@ -160,9 +166,13 @@ function Transactions() {
         </div>
 
         {/* Filter Controls Bar */}
-        <div className="animate-section flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className={`animate-section flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-4 shadow-sm ${
+          isDark ? "border-slate-800 bg-black" : "border-[#c5e8f2] bg-[#eaf8fc]"
+        }`}>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <div className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${
+              isDark ? "text-slate-300" : "text-slate-400"
+            }`}>
               <Filter className="h-4 w-4" />
               <span>Filters:</span>
             </div>
@@ -171,7 +181,9 @@ function Transactions() {
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-slate-800"
+              className={`rounded-xl border px-3 py-2 text-xs font-semibold outline-none focus:border-sky-500 ${
+                isDark ? "border-slate-800 bg-black text-white" : "border-[#c5e8f2] bg-[#f5fcff] text-slate-800"
+              }`}
             >
               <option value="">All Statuses</option>
               <option value="failed">Failed</option>
@@ -184,7 +196,9 @@ function Transactions() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-800 outline-none focus:border-slate-800"
+              className={`rounded-xl border px-3 py-2 text-xs font-semibold outline-none focus:border-sky-500 ${
+                isDark ? "border-slate-800 bg-black text-white" : "border-[#c5e8f2] bg-[#f5fcff] text-slate-800"
+              }`}
             >
               <option value="">All Categories</option>
               <option value="INSUFFICIENT_FUNDS">Insufficient Funds</option>
@@ -222,11 +236,15 @@ function Transactions() {
         </div>
 
         {/* Transactions Table & Mobile View */}
-        <section className="animate-section rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <section className={`animate-section overflow-hidden rounded-2xl border shadow-sm ${
+          isDark ? "border-slate-800 bg-black" : "border-[#c5e8f2] bg-[#eaf8fc]"
+        }`}>
           {/* Table View */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-slate-200 bg-slate-50 text-slate-500 uppercase font-semibold">
+              <thead className={`border-b uppercase font-semibold ${
+                isDark ? "border-slate-800 bg-black text-slate-300" : "border-[#c5e8f2] bg-[#eaf8fc] text-slate-600"
+              }`}>
                 <tr>
                   <th className="px-4 py-3 w-10 text-center">
                     <button onClick={handleSelectAll}>
@@ -247,7 +265,7 @@ function Transactions() {
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-slate-100">
+              <tbody className={`divide-y ${isDark ? "divide-slate-800" : "divide-slate-100"}`}>
                 {transactions.map((txn) => {
                   const isSelected = selectedTxnIds.includes(txn._id);
                   return (
@@ -255,7 +273,7 @@ function Transactions() {
                       key={txn._id}
                       onClick={() => navigate(`/transactions/${txn._id}`)}
                       className={`cursor-pointer transition ${
-                        isSelected ? "bg-amber-500/5" : "hover:bg-slate-50"
+                        isSelected ? "bg-amber-500/10" : isDark ? "hover:bg-slate-900" : "hover:bg-[#f5fcff]"
                       }`}
                     >
                       <td
@@ -269,13 +287,13 @@ function Transactions() {
                         )}
                       </td>
                       <td className="px-4 py-3.5">
-                        <p className="font-bold text-slate-900">{txn.customerName}</p>
-                        <p className="text-slate-400 text-[11px]">{txn.customerEmail}</p>
+                        <p className={`font-bold ${isDark ? "text-white" : "text-slate-900"}`}>{txn.customerName}</p>
+                        <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-400"}`}>{txn.customerEmail}</p>
                       </td>
-                      <td className="px-4 py-3.5 font-mono text-slate-600">
+                      <td className={`px-4 py-3.5 font-mono ${isDark ? "text-slate-200" : "text-slate-600"}`}>
                         {txn.razorpayPaymentId}
                       </td>
-                      <td className="px-4 py-3.5 font-bold text-slate-900">
+                      <td className={`px-4 py-3.5 font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
                         ₹{txn.amount}
                       </td>
                       <td className="px-4 py-3.5">
@@ -295,23 +313,27 @@ function Transactions() {
           </div>
 
           {/* Mobile Card List */}
-          <div className="md:hidden divide-y divide-slate-100 p-3">
+          <div className={`divide-y p-3 md:hidden ${isDark ? "divide-slate-800" : "divide-slate-100"}`}>
             {transactions.map((txn) => (
               <div
                 key={txn._id}
                 onClick={() => navigate(`/transactions/${txn._id}`)}
-                className="p-4 space-y-3 cursor-pointer hover:bg-slate-50 rounded-xl"
+                className={`cursor-pointer space-y-3 rounded-xl p-4 ${
+                  isDark ? "hover:bg-slate-900" : "hover:bg-[#f5fcff]"
+                }`}
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-bold text-slate-900">{txn.customerName}</p>
-                    <p className="text-xs text-slate-500">{txn.customerEmail}</p>
+                    <p className={`font-bold ${isDark ? "text-white" : "text-slate-900"}`}>{txn.customerName}</p>
+                    <p className={`text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>{txn.customerEmail}</p>
                   </div>
                   <StatusBadge status={txn.status} />
                 </div>
 
-                <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-                  <span className="font-bold text-slate-900">₹{txn.amount}</span>
+                <div className={`flex items-center justify-between border-t pt-2 text-xs ${
+                  isDark ? "border-slate-800" : "border-slate-100"
+                }`}>
+                  <span className={`font-bold ${isDark ? "text-white" : "text-slate-900"}`}>₹{txn.amount}</span>
                   <CategoryBadge category={txn.category} />
                 </div>
               </div>
@@ -319,17 +341,21 @@ function Transactions() {
           </div>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3.5 bg-slate-50">
-            <span className="text-xs text-slate-500 font-medium">
-              Showing page <strong className="text-slate-900">{page}</strong> of{" "}
-              <strong className="text-slate-900">{totalPages}</strong> ({totalItems} total)
+          <div className={`flex items-center justify-between border-t px-4 py-3.5 ${
+            isDark ? "border-slate-800 bg-black" : "border-[#c5e8f2] bg-[#eaf8fc]"
+          }`}>
+            <span className={`text-xs font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
+              Showing page <strong className={isDark ? "text-white" : "text-slate-900"}>{page}</strong> of{" "}
+              <strong className={isDark ? "text-white" : "text-slate-900"}>{totalPages}</strong> ({totalItems} total)
             </span>
 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(p - 1, 1))}
                 disabled={page === 1}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+                className={`rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-40 ${
+                  isDark ? "border-slate-800 bg-black text-slate-200 hover:bg-slate-900" : "border-[#c5e8f2] bg-[#f5fcff] text-slate-700 hover:bg-[#eaf8fc]"
+                }`}
               >
                 <ChevronLeft className="h-4 w-4 inline" /> Previous
               </button>
@@ -337,7 +363,9 @@ function Transactions() {
               <button
                 onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
                 disabled={page === totalPages}
-                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40"
+                className={`rounded-lg border px-3 py-1.5 text-xs font-bold disabled:opacity-40 ${
+                  isDark ? "border-slate-800 bg-black text-slate-200 hover:bg-slate-900" : "border-[#c5e8f2] bg-[#f5fcff] text-slate-700 hover:bg-[#eaf8fc]"
+                }`}
               >
                 Next <ChevronRight className="h-4 w-4 inline" />
               </button>

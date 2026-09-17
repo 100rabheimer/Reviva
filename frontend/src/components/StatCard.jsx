@@ -1,10 +1,18 @@
 import { TrendingUp, ArrowUpRight } from "lucide-react";
+import { useTheme } from "../context/ThemeContext";
 
-function StatCard({ label, value, trend = "+12.4%", subtitle = "vs previous 30 days", icon: Icon, color = "amber" }) {
+function StatCard({ label, value, trend = "+12.4%", subtitle = "vs previous 30 days", icon: Icon, color = "amber", className = "" }) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-sky-100 bg-white p-5 shadow-sm transition-all hover:shadow-md hover:border-sky-200">
+    <div className={`${className} group relative overflow-hidden rounded-2xl border p-5 shadow-sm transition-all ${
+      isDark
+        ? "border-slate-800 bg-black hover:border-slate-700 hover:bg-slate-950"
+        : "border-sky-100 bg-white hover:border-sky-200 hover:shadow-md"
+    }`}>
       <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <p className={`text-xs font-semibold uppercase tracking-wider ${isDark ? "text-slate-300" : "text-slate-500"}`}>
           {label}
         </p>
 
@@ -16,7 +24,7 @@ function StatCard({ label, value, trend = "+12.4%", subtitle = "vs previous 30 d
       </div>
 
       <div className="mt-3 flex items-baseline justify-between">
-        <h3 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+        <h3 className={`text-2xl font-bold tracking-tight sm:text-3xl ${isDark ? "text-white" : "text-slate-900"}`}>
           {value}
         </h3>
 
@@ -28,7 +36,7 @@ function StatCard({ label, value, trend = "+12.4%", subtitle = "vs previous 30 d
         )}
       </div>
 
-      <p className="mt-2 text-[11px] font-medium text-slate-500">
+      <p className={`mt-2 text-[11px] font-medium ${isDark ? "text-slate-400" : "text-slate-500"}`}>
         {subtitle}
       </p>
     </div>

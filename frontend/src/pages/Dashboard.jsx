@@ -77,25 +77,33 @@ function Dashboard() {
   return (
     <div
       className={`flex min-h-screen min-w-0 flex-1 flex-col transition-colors duration-200 ${
-        isDark ? "bg-[#f4fbff] text-slate-900" : "bg-[#edf8ff] text-slate-900"
+        isDark ? "bg-black text-white" : "bg-[#edf8ff] text-slate-900"
       }`}
     >
       <Header onOpenWebhookModal={() => setIsWebhookModalOpen(true)} search={search} setSearch={setSearch} />
 
       <main ref={pageRef} className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Top Header Banner */}
-        <div className="animate-section flex flex-col gap-4 rounded-2xl border border-sky-100 bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className={`animate-section flex flex-col gap-4 rounded-2xl border p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between ${
+          isDark ? "border-slate-800 bg-black" : "border-sky-100 bg-white/90"
+        }`}>
           <div>
-            <h1 className="page-title mt-1 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+            <h1 className={`page-title mt-1 text-2xl font-extrabold tracking-tight sm:text-3xl ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}>
               Payment Recovery Dashboard
             </h1>
-            <p className="page-subtitle mt-1 text-xs text-slate-600 sm:text-sm">
+            <p className={`page-subtitle mt-1 text-xs sm:text-sm ${
+              isDark ? "text-slate-300" : "text-slate-600"
+            }`}>
               Real-time monitoring of failed Razorpay charges, LLM classification & automated retry engine.
             </p>
           </div>
 
           {/* Time Filter Pills */}
-          <div className="flex items-center gap-1.5 rounded-xl border border-sky-200 bg-white p-1 shadow-sm">
+          <div className={`flex items-center gap-1.5 rounded-xl border p-1 shadow-sm ${
+            isDark ? "border-slate-800 bg-black" : "border-sky-200 bg-white"
+          }`}>
             {["7d", "30d", "90d", "1y"].map((range) => (
               <button
                 key={range}
@@ -103,6 +111,8 @@ function Dashboard() {
                 className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
                   timeRange === range
                     ? "bg-sky-600 text-white shadow"
+                    : isDark
+                    ? "text-slate-300 hover:bg-slate-800"
                     : "text-slate-600 hover:bg-sky-50"
                 }`}
               >
@@ -167,13 +177,17 @@ function Dashboard() {
         {/* Charts Row */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Recovery Trend (2 Cols) */}
-          <section className="animate-section lg:col-span-2 rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between border-b border-sky-100 pb-4">
+          <section className={`animate-section lg:col-span-2 rounded-2xl border p-5 shadow-sm ${
+            isDark ? "border-slate-800 bg-black" : "border-sky-100 bg-white"
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-4 ${
+              isDark ? "border-slate-800" : "border-sky-100"
+            }`}>
               <div>
-                <h2 className="text-base font-bold text-slate-900">
+                <h2 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
                   Revenue Recovery Trend
                 </h2>
-                <p className="text-xs text-slate-600">
+                <p className={`text-xs ${isDark ? "text-slate-300" : "text-slate-600"}`}>
                   Recovered Revenue vs Unrecovered Failed Amounts over time
                 </p>
               </div>
@@ -188,12 +202,14 @@ function Dashboard() {
           </section>
 
           {/* Failure Reasons Breakdown (1 Col) */}
-          <section className="animate-section rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
-            <div className="border-b border-sky-100 pb-4">
-              <h2 className="text-base font-bold text-slate-900">
+          <section className={`animate-section rounded-2xl border p-5 shadow-sm ${
+            isDark ? "border-slate-800 bg-black" : "border-sky-100 bg-white"
+          }`}>
+            <div className={`border-b pb-4 ${isDark ? "border-slate-800" : "border-sky-100"}`}>
+              <h2 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
                 Failure Reason Categories
               </h2>
-              <p className="text-xs text-slate-600">
+              <p className={`text-xs ${isDark ? "text-slate-300" : "text-slate-600"}`}>
                 LLM Rule-based & Fallback failure classification
               </p>
             </div>
@@ -205,13 +221,17 @@ function Dashboard() {
         </div>
 
         {/* Live Recovery Activity Stream Table */}
-        <section className="animate-section rounded-2xl border border-sky-100 bg-white p-5 shadow-sm space-y-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-sky-100 pb-4">
+        <section className={`animate-section rounded-2xl border p-5 shadow-sm space-y-4 ${
+          isDark ? "border-slate-800 bg-black" : "border-sky-100 bg-white"
+        }`}>
+          <div className={`flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b pb-4 ${
+            isDark ? "border-slate-800" : "border-sky-100"
+          }`}>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
                 Recent Payment Recovery Activity
               </h2>
-              <p className="text-xs text-slate-600">
+              <p className={`text-xs ${isDark ? "text-slate-300" : "text-slate-600"}`}>
                 Latest payment failure events captured by Razorpay webhook listener
               </p>
             </div>
@@ -227,7 +247,11 @@ function Dashboard() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="border-b border-sky-100 bg-[#f4fbff] text-slate-700 uppercase font-semibold">
+              <thead className={`border-b uppercase font-semibold ${
+                isDark
+                  ? "border-slate-800 bg-black text-slate-200"
+                  : "border-sky-100 bg-[#f4fbff] text-slate-700"
+              }`}>
                 <tr>
                   <th className="px-4 py-3">Customer</th>
                   <th className="px-4 py-3">Payment ID</th>
@@ -237,7 +261,7 @@ function Dashboard() {
                   <th className="px-4 py-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-sky-100">
+              <tbody className={`divide-y ${isDark ? "divide-slate-800" : "divide-sky-100"}`}>
                 {recentTxns
                   .filter((txn) => {
                     if (!search.trim()) return true;
@@ -252,16 +276,18 @@ function Dashboard() {
                   <tr
                     key={txn._id}
                     onClick={() => navigate(`/transactions/${txn._id}`)}
-                    className="cursor-pointer transition hover:bg-sky-50"
+                    className={`cursor-pointer transition ${
+                      isDark ? "hover:bg-slate-900" : "hover:bg-sky-50"
+                    }`}
                   >
                     <td className="px-4 py-3.5">
-                      <p className="font-bold text-slate-900">{txn.customerName}</p>
-                      <p className="text-slate-500 text-[11px]">{txn.customerEmail}</p>
+                      <p className={`font-bold ${isDark ? "text-white" : "text-slate-900"}`}>{txn.customerName}</p>
+                      <p className={`text-[11px] ${isDark ? "text-slate-400" : "text-slate-500"}`}>{txn.customerEmail}</p>
                     </td>
-                    <td className="px-4 py-3.5 font-mono text-slate-700">
+                    <td className={`px-4 py-3.5 font-mono ${isDark ? "text-slate-200" : "text-slate-700"}`}>
                       {txn.razorpayPaymentId}
                     </td>
-                    <td className="px-4 py-3.5 font-bold text-slate-900">
+                    <td className={`px-4 py-3.5 font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
                       ₹{txn.amount}
                     </td>
                     <td className="px-4 py-3.5">

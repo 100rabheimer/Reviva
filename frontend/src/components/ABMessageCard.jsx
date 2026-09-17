@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { Sparkles, Copy, Check, Send, Mail, MessageSquare, Smartphone, Zap } from "lucide-react";
 import { useToast } from "../context/ToastContext";
+import { useTheme } from "../context/ThemeContext";
 
 function ABMessageCard({ variantA, variantB, onSelectVariant, selectedVariant = "A" }) {
   const { addToast } = useToast();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const [copiedVariant, setCopiedVariant] = useState(null);
 
   const handleCopy = (variantLetter, text) => {
@@ -26,10 +29,12 @@ function ABMessageCard({ variantA, variantB, onSelectVariant, selectedVariant = 
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div className={`flex items-center justify-between border-b pb-3 ${
+        isDark ? "border-slate-800" : "border-slate-100"
+      }`}>
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-amber-500" />
-          <h3 className="font-bold text-slate-900 text-base">
+          <h3 className={`text-base font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
             GenAI A/B Message Experiments
           </h3>
         </div>
@@ -44,6 +49,8 @@ function ABMessageCard({ variantA, variantB, onSelectVariant, selectedVariant = 
           className={`relative rounded-2xl border p-4 transition ${
             selectedVariant === "A"
               ? "border-amber-500 bg-amber-500/5 ring-2 ring-amber-500/20"
+              : isDark
+              ? "border-slate-800 bg-black hover:border-slate-700"
               : "border-slate-200 bg-white hover:border-slate-300"
           }`}
         >
@@ -52,7 +59,7 @@ function ABMessageCard({ variantA, variantB, onSelectVariant, selectedVariant = 
               <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-900 text-xs font-bold text-white">
                 A
               </span>
-              <span className="text-xs font-bold text-slate-900">
+              <span className={`text-xs font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
                 {variantA?.tone || "Friendly & Empathetic"}
               </span>
             </div>
@@ -82,7 +89,11 @@ function ABMessageCard({ variantA, variantB, onSelectVariant, selectedVariant = 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleCopy("A", `${variantA?.subject}\n\n${variantA?.body}`)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium ${
+                  isDark
+                    ? "border-slate-800 text-slate-200 hover:bg-slate-900"
+                    : "border-slate-200 text-slate-700 hover:bg-slate-100"
+                }`}
               >
                 {copiedVariant === "A" ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                 Copy
@@ -93,6 +104,8 @@ function ABMessageCard({ variantA, variantB, onSelectVariant, selectedVariant = 
                 className={`rounded-lg px-3 py-1 text-xs font-bold transition ${
                   selectedVariant === "A"
                     ? "bg-amber-600 text-white"
+                    : isDark
+                    ? "bg-slate-900 text-slate-200 hover:bg-slate-800"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
@@ -107,6 +120,8 @@ function ABMessageCard({ variantA, variantB, onSelectVariant, selectedVariant = 
           className={`relative rounded-2xl border p-4 transition ${
             selectedVariant === "B"
               ? "border-amber-500 bg-amber-500/5 ring-2 ring-amber-500/20"
+              : isDark
+              ? "border-slate-800 bg-black hover:border-slate-700"
               : "border-slate-200 bg-white hover:border-slate-300"
           }`}
         >
@@ -115,7 +130,7 @@ function ABMessageCard({ variantA, variantB, onSelectVariant, selectedVariant = 
               <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold text-white">
                 B
               </span>
-              <span className="text-xs font-bold text-slate-900">
+              <span className={`text-xs font-bold ${isDark ? "text-white" : "text-slate-900"}`}>
                 {variantB?.tone || "Direct & Urgent"}
               </span>
             </div>
@@ -145,7 +160,11 @@ function ABMessageCard({ variantA, variantB, onSelectVariant, selectedVariant = 
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleCopy("B", `${variantB?.subject}\n\n${variantB?.body}`)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs font-medium ${
+                  isDark
+                    ? "border-slate-800 text-slate-200 hover:bg-slate-900"
+                    : "border-slate-200 text-slate-700 hover:bg-slate-100"
+                }`}
               >
                 {copiedVariant === "B" ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                 Copy
@@ -156,6 +175,8 @@ function ABMessageCard({ variantA, variantB, onSelectVariant, selectedVariant = 
                 className={`rounded-lg px-3 py-1 text-xs font-bold transition ${
                   selectedVariant === "B"
                     ? "bg-amber-600 text-white"
+                    : isDark
+                    ? "bg-slate-900 text-slate-200 hover:bg-slate-800"
                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >

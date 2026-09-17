@@ -13,10 +13,10 @@ const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="rounded-xl border border-sky-100 bg-white/95 p-3 shadow-xl backdrop-blur-md text-xs text-slate-700">
-        <p className="font-bold text-slate-700 mb-1">{data.label || data.category}</p>
-        <p className="text-slate-500">
-          Count: <span className="font-bold text-slate-900">{data.count}</span> ({data.percentage || 20}%)
+      <div className="rounded-xl border border-sky-100 bg-white/95 p-3 text-xs text-slate-700 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-black dark:text-slate-200">
+        <p className="mb-1 font-bold text-slate-700 dark:text-white">{data.label || data.category}</p>
+        <p className="text-slate-500 dark:text-slate-400">
+          Count: <span className="font-bold text-slate-900 dark:text-white">{data.count}</span> ({data.percentage || 20}%)
         </p>
       </div>
     );

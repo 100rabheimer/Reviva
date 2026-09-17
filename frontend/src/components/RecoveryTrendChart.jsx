@@ -12,14 +12,14 @@ import {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="rounded-xl border border-sky-100 bg-white/95 p-3 shadow-xl backdrop-blur-md text-xs text-slate-700">
-        <p className="font-bold border-b border-sky-100 pb-1 mb-2 text-slate-700">{label}</p>
+      <div className="rounded-xl border border-sky-100 bg-white/95 p-3 text-xs text-slate-700 shadow-xl backdrop-blur-md dark:border-slate-800 dark:bg-black dark:text-slate-200">
+        <p className="mb-2 border-b border-sky-100 pb-1 font-bold text-slate-700 dark:border-slate-800 dark:text-white">{label}</p>
         {payload.map((entry, index) => (
           <div key={`item-${index}`} className="flex items-center justify-between gap-4 py-0.5">
             <span style={{ color: entry.color }} className="font-medium">
               {entry.name}:
             </span>
-            <span className="font-bold font-mono text-slate-900">
+            <span className="font-mono font-bold text-slate-900 dark:text-white">
               ₹{entry.value?.toLocaleString("en-IN")}
             </span>
           </div>
