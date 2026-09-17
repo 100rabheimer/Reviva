@@ -1,15 +1,50 @@
 function StatusBadge({ status }) {
-  const isFailed = status === "failed";
+  const configs = {
+    recovered: {
+      label: "Recovered",
+      styles: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-400/30",
+      dot: "bg-emerald-500 dark:bg-emerald-300",
+    },
+    captured: {
+      label: "Recovered",
+      styles: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-400/30",
+      dot: "bg-emerald-500 dark:bg-emerald-300",
+    },
+    retrying: {
+      label: "Retrying",
+      styles: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-300/30",
+      dot: "bg-amber-500 animate-pulse dark:bg-amber-300",
+    },
+    action_needed: {
+      label: "Action Needed",
+      styles: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-sky-500/10 dark:text-sky-200 dark:border-sky-300/30",
+      dot: "bg-indigo-500 dark:bg-sky-300",
+    },
+    failed: {
+      label: "Failed",
+      styles: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-200 dark:border-rose-300/30",
+      dot: "bg-rose-500 dark:bg-rose-300",
+    },
+    abandoned: {
+      label: "Abandoned",
+      styles: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-500/10 dark:text-slate-200 dark:border-slate-300/30",
+      dot: "bg-slate-400 dark:bg-slate-300",
+    },
+  };
+
+  const key = status?.toLowerCase() || "failed";
+  const config = configs[key] || {
+    label: status || "Failed",
+    styles: "bg-rose-50 text-rose-700 border-rose-200",
+    dot: "bg-rose-500",
+  };
 
   return (
     <span
-      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
-        isFailed
-          ? "bg-red-50 text-red-700"
-          : "bg-green-50 text-green-700"
-      }`}
+      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-semibold capitalize ${config.styles}`}
     >
-      {status}
+      <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />
+      {config.label}
     </span>
   );
 }

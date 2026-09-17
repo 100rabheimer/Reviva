@@ -1,402 +1,320 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  Bell,
-  Check,
-  ChevronDown,
-  CreditCard,
-  Mail,
-  RotateCcw,
-  Save,
   Settings as SettingsIcon,
-  ShieldCheck,
+  Save,
+  RotateCcw,
+  Check,
   User,
+  CreditCard,
+  Bell,
+  ShieldCheck,
+  Sliders,
+  Zap,
+  Key,
+  Copy,
+  CheckCircle2,
 } from "lucide-react";
 
+import Header from "../components/Header";
+import WebhookSimulatorModal from "../components/WebhookSimulatorModal";
+import { fetchSettings, updateSettings, fetchRetryRules, updateRetryRules } from "../services/api";
 import usePageAnimation from "../hooks/usePageAnimation";
+import { useToast } from "../context/ToastContext";
 
 function Settings() {
   const pageRef = useRef(null);
-
+  const { addToast } = useToast();
   usePageAnimation(pageRef);
 
-  const [companyName, setCompanyName] = useState("Reviva");
-  const [email, setEmail] = useState("admin@reviva.com");
+  const [settings, setSettingsState] = useState({
+    companyName: "Acme Fintech Corp",
+    recoveryEmail: "billing@acmefintech.com",
+    brandTone: "Friendly & Empathetic",
+    llmProvider: "Claude 3.5 Sonnet (Recommended)",
+    confidenceThreshold: 85,
+    channels: { email: true, sms: true, whatsapp: true },
+    razorpayWebhookSecret: "whsec_reviva_98123abcdef45678",
+    razorpayKeyId: "rzp_live_89123456789abc",
+    webhookEndpointUrl: "https://api.reviva.io/v1/webhooks/razorpay",
+  });
 
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [recoveryNotifications, setRecoveryNotifications] = useState(true);
-  const [failedPaymentNotifications, setFailedPaymentNotifications] =
-    useState(false);
+  const [retryRules, setRetryRulesState] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const [maxRetries, setMaxRetries] = useState("3");
-  const [retryInterval, setRetryInterval] = useState("24");
+  const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState(false);
 
-  const [saved, setSaved] = useState(false);
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const [sRes, rRes] = await Promise.all([fetchSettings(), fetchRetryRules()]);
+        if (sRes) setSettingsState(sRes);
+        if (rRes) setRetryRulesState(rRes);
+      } catch (err) {
+        console.error("Settings load error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
-  const handleSave = () => {
-    setSaved(true);
-
-    setTimeout(() => {
-      setSaved(false);
-    }, 2500);
+  const handleToggleRuleAutoRetry = (ruleId) => {
+    setRetryRulesState((prev) =>
+      prev.map((r) => (r.id === ruleId ? { ...r, autoRetryEnabled: !r.autoRetryEnabled } : r))
+    );
   };
 
-  const handleReset = () => {
-    setCompanyName("Reviva");
-    setEmail("admin@reviva.com");
+  const handleUpdateRuleDelay = (ruleId, delay) => {
+    setRetryRulesState((prev) =>
+      prev.map((r) => (r.id === ruleId ? { ...r, retryDelayHours: Number(delay) } : r))
+    );
+  };
 
-    setEmailNotifications(true);
-    setRecoveryNotifications(true);
-    setFailedPaymentNotifications(false);
+  const handleSaveAll = async () => {
+    setSaving(true);
+    try {
+      await updateSettings(settings);
+      await updateRetryRules(retryRules);
+      addToast("Merchant retry rules and settings saved successfully!", "success");
+    } catch (err) {
+      addToast("Failed to save settings", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    setMaxRetries("3");
-    setRetryInterval("24");
+  const handleCopyWebhookUrl = () => {
+    navigator.clipboard.writeText(settings.webhookEndpointUrl);
+    setCopiedUrl(true);
+    addToast("Webhook Endpoint URL copied!", "success");
+    setTimeout(() => setCopiedUrl(false), 2000);
   };
 
   return (
-    <main
-      ref={pageRef}
-      className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8"
-    >
-      <div className="mx-auto max-w-5xl">
-        {/* Page Heading */}
+    <div className="flex flex-1 flex-col min-w-0 bg-slate-50 min-h-screen">
+      <Header onOpenWebhookModal={() => setIsWebhookModalOpen(true)} />
 
-        <div className="animate-section">
-          <p className="text-xs font-medium tracking-wide text-zinc-500 sm:text-sm">
-            APPLICATION
-          </p>
+      <main ref={pageRef} className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Header */}
+        <div className="animate-section flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-bold text-amber-400">
+                Phase 2 Rules & AI Config
+              </span>
+            </div>
+            <h1 className="page-title mt-1 text-2xl font-extrabold text-slate-900 sm:text-3xl tracking-tight">
+              Merchant Settings & Retry Rules
+            </h1>
+            <p className="page-subtitle mt-1 text-xs sm:text-sm text-slate-500">
+              Configure automated retry delays per failure category, brand outreach tone, and Razorpay API credentials.
+            </p>
+          </div>
 
-          <h1 className="page-title mt-2 flex items-center gap-3 text-2xl font-semibold text-[#1F1F1C] sm:text-3xl">
-            <SettingsIcon
-              size={28}
-              className="hidden sm:block"
-            />
-
-            Settings
-          </h1>
-
-          <p className="page-subtitle mt-2 text-sm text-zinc-600">
-            Manage your recovery preferences and application settings.
-          </p>
+          <button
+            onClick={handleSaveAll}
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-amber-700 disabled:opacity-50"
+          >
+            <Save className="h-4 w-4" />
+            <span>{saving ? "Saving Changes..." : "Save Settings"}</span>
+          </button>
         </div>
 
-        {/* Success Message */}
-
-        {saved && (
-          <div className="animate-card mt-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-100">
-              <Check size={17} />
-            </div>
-
+        {/* SECTION 1: MERCHANT RETRY RULES CONFIGURATION TABLE (Phase 2 Core Requirement) */}
+        <section className="animate-section rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
-              <p className="font-medium">
-                Settings saved successfully
-              </p>
-
-              <p className="mt-0.5 text-xs text-green-600">
-                Your preferences have been updated.
+              <h2 className="text-base font-bold text-slate-900">
+                Category-based Retry Rules Configuration
+              </h2>
+              <p className="text-xs text-slate-500">
+                Define retry delays, auto-retry toggles, and max retry limits for each failure category
               </p>
             </div>
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
+              Rule Engine Active
+            </span>
           </div>
-        )}
 
-        <div className="mt-6 space-y-6">
-          {/* Account Settings */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-slate-200 bg-slate-50 text-slate-500 uppercase font-semibold">
+                <tr>
+                  <th className="px-4 py-3">Failure Category</th>
+                  <th className="px-4 py-3">Auto Retry</th>
+                  <th className="px-4 py-3">Retry Delay Window</th>
+                  <th className="px-4 py-3">Max Attempts</th>
+                  <th className="px-4 py-3">Strategy Description</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium">
+                {retryRules.map((rule) => (
+                  <tr key={rule.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3.5 font-bold text-slate-900">
+                      {rule.categoryLabel}
+                    </td>
 
-          <section className="animate-section rounded-xl border border-[#DDD8CF] bg-white p-4 sm:p-6">
-            <div className="flex items-start gap-3 border-b border-[#EEEAE3] pb-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F3F0E9] text-[#1F1F1C]">
-                <User size={20} />
-              </div>
+                    {/* Auto Retry Toggle */}
+                    <td className="px-4 py-3.5">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleRuleAutoRetry(rule.id)}
+                        className={`relative h-6 w-11 shrink-0 rounded-full transition ${
+                          rule.autoRetryEnabled ? "bg-amber-600" : "bg-slate-300"
+                        }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                            rule.autoRetryEnabled ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </td>
 
+                    {/* Retry Delay Input */}
+                    <td className="px-4 py-3.5">
+                      <select
+                        value={rule.retryDelayHours}
+                        disabled={!rule.autoRetryEnabled}
+                        onChange={(e) => handleUpdateRuleDelay(rule.id, e.target.value)}
+                        className="rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-800 outline-none focus:border-slate-800 disabled:opacity-40"
+                      >
+                        <option value="0">Immediate (0h)</option>
+                        <option value="1">1 Hour</option>
+                        <option value="6">6 Hours</option>
+                        <option value="24">24 Hours (1 Day)</option>
+                        <option value="48">48 Hours (2 Days)</option>
+                        <option value="72">72 Hours (3 Days)</option>
+                      </select>
+                    </td>
+
+                    <td className="px-4 py-3.5 font-bold text-slate-700">
+                      {rule.maxAttempts} Attempts
+                    </td>
+
+                    <td className="px-4 py-3.5 text-slate-500 text-[11px]">
+                      {rule.description}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* SECTION 2: BRAND TONE & LLM AI CONFIGURATION */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Brand Tone & Channels */}
+          <section className="animate-section rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+              Brand Tone & Outreach Channels
+            </h2>
+
+            <div className="space-y-4 text-xs">
               <div>
-                <h2 className="text-base font-semibold text-[#1F1F1C]">
-                  Account Settings
-                </h2>
-
-                <p className="mt-1 text-sm text-zinc-500">
-                  Manage your basic account information.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div className="animate-card">
-                <label className="text-sm font-medium text-[#1F1F1C]">
-                  Company Name
+                <label className="block font-bold text-slate-700 mb-1">
+                  Default GenAI Brand Outreach Tone
                 </label>
-
-                <input
-                  type="text"
-                  value={companyName}
+                <select
+                  value={settings.brandTone}
                   onChange={(e) =>
-                    setCompanyName(e.target.value)
+                    setSettingsState({ ...settings, brandTone: e.target.value })
                   }
-                  className="mt-2 w-full rounded-lg border border-[#DDD8CF] bg-white px-3 py-2.5 text-sm text-[#1F1F1C] outline-none transition focus:border-[#C66A2B] focus:ring-2 focus:ring-[#C66A2B]/10"
-                />
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-900 outline-none focus:border-slate-800"
+                >
+                  <option value="Friendly & Empathetic">Friendly & Empathetic</option>
+                  <option value="Professional & Direct">Professional & Direct</option>
+                  <option value="Incentivized">Incentivized (With Promo / Discount)</option>
+                  <option value="Urgent">Urgent / Account Pause Warning</option>
+                </select>
               </div>
 
-              <div className="animate-card">
-                <label className="text-sm font-medium text-[#1F1F1C]">
-                  Recovery Email
+              <div>
+                <label className="block font-bold text-slate-700 mb-2">
+                  Active Outreach Channels:
                 </label>
+                <div className="space-y-2">
+                  {["email", "sms", "whatsapp"].map((ch) => (
+                    <label key={ch} className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={settings.channels?.[ch] ?? true}
+                        onChange={(e) =>
+                          setSettingsState({
+                            ...settings,
+                            channels: {
+                              ...settings.channels,
+                              [ch]: e.target.checked,
+                            },
+                          })
+                        }
+                        className="h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                      />
+                      <span className="font-semibold text-slate-800 capitalize">{ch} Outreach</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
 
-                <div className="relative mt-2">
-                  <Mail
-                    size={17}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
-                  />
+          {/* Razorpay Webhook Configuration */}
+          <section className="animate-section rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+            <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+              Razorpay Webhook Integration
+            </h2>
 
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Webhook Endpoint URL
+                </label>
+                <div className="flex gap-2">
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(e) =>
-                      setEmail(e.target.value)
-                    }
-                    className="w-full rounded-lg border border-[#DDD8CF] bg-white py-2.5 pl-10 pr-3 text-sm text-[#1F1F1C] outline-none transition focus:border-[#C66A2B] focus:ring-2 focus:ring-[#C66A2B]/10"
+                    type="text"
+                    readOnly
+                    value={settings.webhookEndpointUrl}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-700 outline-none"
                   />
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Recovery Settings */}
-
-          <section className="animate-section rounded-xl border border-[#DDD8CF] bg-white p-4 sm:p-6">
-            <div className="flex items-start gap-3 border-b border-[#EEEAE3] pb-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F3F0E9] text-[#1F1F1C]">
-                <CreditCard size={20} />
-              </div>
-
-              <div>
-                <h2 className="text-base font-semibold text-[#1F1F1C]">
-                  Recovery Settings
-                </h2>
-
-                <p className="mt-1 text-sm text-zinc-500">
-                  Configure how failed payments should be retried.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-              {/* Max Retries */}
-
-              <div className="animate-card">
-                <label className="text-sm font-medium text-[#1F1F1C]">
-                  Maximum Retry Attempts
-                </label>
-
-                <div className="relative mt-2">
-                  <select
-                    value={maxRetries}
-                    onChange={(e) =>
-                      setMaxRetries(e.target.value)
-                    }
-                    className="w-full appearance-none rounded-lg border border-[#DDD8CF] bg-white px-3 py-2.5 pr-10 text-sm text-[#1F1F1C] outline-none transition focus:border-[#C66A2B] focus:ring-2 focus:ring-[#C66A2B]/10"
+                  <button
+                    onClick={handleCopyWebhookUrl}
+                    className="rounded-xl border border-slate-200 bg-white px-3 py-2 font-bold text-slate-700 hover:bg-slate-100"
                   >
-                    <option value="1">1 attempt</option>
-                    <option value="2">2 attempts</option>
-                    <option value="3">3 attempts</option>
-                    <option value="4">4 attempts</option>
-                    <option value="5">5 attempts</option>
-                  </select>
-
-                  <ChevronDown
-                    size={17}
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
-                  />
+                    {copiedUrl ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                  </button>
                 </div>
-
-                <p className="mt-2 text-xs text-zinc-500">
-                  Maximum number of times a failed payment can be retried.
-                </p>
               </div>
 
-              {/* Retry Interval */}
-
-              <div className="animate-card">
-                <label className="text-sm font-medium text-[#1F1F1C]">
-                  Retry Interval
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Razorpay Webhook Secret Key
                 </label>
-
-                <div className="relative mt-2">
-                  <select
-                    value={retryInterval}
-                    onChange={(e) =>
-                      setRetryInterval(e.target.value)
-                    }
-                    className="w-full appearance-none rounded-lg border border-[#DDD8CF] bg-white px-3 py-2.5 pr-10 text-sm text-[#1F1F1C] outline-none transition focus:border-[#C66A2B] focus:ring-2 focus:ring-[#C66A2B]/10"
-                  >
-                    <option value="1">1 hour</option>
-                    <option value="6">6 hours</option>
-                    <option value="12">12 hours</option>
-                    <option value="24">24 hours</option>
-                    <option value="48">48 hours</option>
-                  </select>
-
-                  <ChevronDown
-                    size={17}
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500"
-                  />
-                </div>
-
-                <p className="mt-2 text-xs text-zinc-500">
-                  Time to wait before scheduling the next retry.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Notifications */}
-
-          <section className="animate-section rounded-xl border border-[#DDD8CF] bg-white p-4 sm:p-6">
-            <div className="flex items-start gap-3 border-b border-[#EEEAE3] pb-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F3F0E9] text-[#1F1F1C]">
-                <Bell size={20} />
-              </div>
-
-              <div>
-                <h2 className="text-base font-semibold text-[#1F1F1C]">
-                  Notifications
-                </h2>
-
-                <p className="mt-1 text-sm text-zinc-500">
-                  Choose which recovery updates you want to receive.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-2 divide-y divide-[#EEEAE3]">
-              {/* Email Notifications */}
-
-              <div className="animate-card flex items-center justify-between gap-4 py-5">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-[#1F1F1C]">
-                    Email Notifications
-                  </p>
-
-                  <p className="mt-1 text-xs leading-5 text-zinc-500 sm:text-sm">
-                    Receive important payment recovery updates by email.
-                  </p>
-                </div>
-
-                <Toggle
-                  enabled={emailNotifications}
-                  setEnabled={setEmailNotifications}
-                />
-              </div>
-
-              {/* Recovery Notifications */}
-
-              <div className="animate-card flex items-center justify-between gap-4 py-5">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-[#1F1F1C]">
-                    Successful Recovery Alerts
-                  </p>
-
-                  <p className="mt-1 text-xs leading-5 text-zinc-500 sm:text-sm">
-                    Get notified when a previously failed payment is recovered.
-                  </p>
-                </div>
-
-                <Toggle
-                  enabled={recoveryNotifications}
-                  setEnabled={setRecoveryNotifications}
-                />
-              </div>
-
-              {/* Failed Payment Notifications */}
-
-              <div className="animate-card flex items-center justify-between gap-4 py-5">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-[#1F1F1C]">
-                    Failed Payment Alerts
-                  </p>
-
-                  <p className="mt-1 text-xs leading-5 text-zinc-500 sm:text-sm">
-                    Receive an alert whenever a new payment failure occurs.
-                  </p>
-                </div>
-
-                <Toggle
-                  enabled={failedPaymentNotifications}
-                  setEnabled={setFailedPaymentNotifications}
+                <input
+                  type="password"
+                  value={settings.razorpayWebhookSecret}
+                  onChange={(e) =>
+                    setSettingsState({
+                      ...settings,
+                      razorpayWebhookSecret: e.target.value,
+                    })
+                  }
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-mono text-slate-900 outline-none focus:border-slate-800"
                 />
               </div>
             </div>
           </section>
-
-          {/* Security Info */}
-
-          <section className="animate-section rounded-xl border border-[#DDD8CF] bg-[#FAF9F6] p-4 sm:p-6">
-            <div className="flex gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-[#1F1F1C]">
-                <ShieldCheck size={20} />
-              </div>
-
-              <div>
-                <h2 className="text-sm font-semibold text-[#1F1F1C]">
-                  Your data is protected
-                </h2>
-
-                <p className="mt-1 text-sm leading-6 text-zinc-600">
-                  Payment recovery preferences are currently stored locally
-                  for the frontend MVP. Backend persistence can be connected
-                  in the next phase.
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Action Buttons */}
-
-          <div className="animate-section flex flex-col-reverse gap-3 border-t border-[#DDD8CF] pt-6 sm:flex-row sm:items-center sm:justify-between">
-            <button
-              onClick={handleReset}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#DDD8CF] bg-white px-4 py-2.5 text-sm font-medium text-[#1F1F1C] transition hover:bg-[#FAF9F6]"
-            >
-              <RotateCcw size={16} />
-
-              Reset Changes
-            </button>
-
-            <button
-              onClick={handleSave}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1F1F1C] px-5 py-2.5 text-sm font-medium text-white transition hover:opacity-90"
-            >
-              <Save size={16} />
-
-              Save Settings
-            </button>
-          </div>
         </div>
-      </div>
-    </main>
-  );
-}
+      </main>
 
-/* ---------------- TOGGLE COMPONENT ---------------- */
-
-function Toggle({ enabled, setEnabled }) {
-  return (
-    <button
-      type="button"
-      onClick={() => setEnabled(!enabled)}
-      className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-        enabled
-          ? "bg-[#1F1F1C]"
-          : "bg-zinc-300"
-      }`}
-      aria-label="Toggle setting"
-    >
-      <span
-        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform ${
-          enabled
-            ? "translate-x-6"
-            : "translate-x-1"
-        }`}
+      <WebhookSimulatorModal
+        isOpen={isWebhookModalOpen}
+        onClose={() => setIsWebhookModalOpen(false)}
       />
-    </button>
+    </div>
   );
 }
 

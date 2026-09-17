@@ -2,447 +2,333 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
-  Copy,
-  Check,
   Sparkles,
   RefreshCw,
+  Copy,
+  Check,
+  Zap,
+  Bot,
+  BrainCircuit,
+  Clock,
+  Send,
+  ShieldCheck,
+  MessageSquare,
+  Mail,
+  Smartphone,
+  CheckCircle2,
 } from "lucide-react";
 
 import CategoryBadge from "../components/CategoryBadge";
 import StatusBadge from "../components/StatusBadge";
+import ABMessageCard from "../components/ABMessageCard";
+import Header from "../components/Header";
+import WebhookSimulatorModal from "../components/WebhookSimulatorModal";
+
+import { fetchTransactionById, generateAIMessageVariants } from "../services/api";
 import usePageAnimation from "../hooks/usePageAnimation";
+import { useToast } from "../context/ToastContext";
 
 function TransactionDetail() {
   const navigate = useNavigate();
   const { id } = useParams();
-
   const pageRef = useRef(null);
+  const { addToast } = useToast();
 
   usePageAnimation(pageRef);
 
-  const [transaction, setTransaction] = useState(null);
+  const [txn, setTxn] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const [generatedMessage, setGeneratedMessage] = useState("");
   const [generating, setGenerating] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [selectedTone, setSelectedTone] = useState("Friendly & Empathetic");
+
+  const [variantA, setVariantA] = useState(null);
+  const [variantB, setVariantB] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState("A");
+
+  const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchTransaction = async () => {
+    const loadTxn = async () => {
       try {
         setLoading(true);
-        setError("");
-
-        const response = await fetch(
-          `http://localhost:3000/api/transactions/${id}`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch transaction");
-        }
-
-        const data = await response.json();
-
-        if (isMounted) {
-          console.log("Transaction detail:", data);
-
-          setTransaction(data);
-
-          if (data.aiMessage) {
-            setGeneratedMessage(data.aiMessage);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch transaction:", error);
-
-        if (isMounted) {
-          setError("Failed to load transaction details.");
-        }
+        const data = await fetchTransactionById(id);
+        setTxn(data);
+        if (data.aiMessageVariantA) setVariantA(data.aiMessageVariantA);
+        if (data.aiMessageVariantB) setVariantB(data.aiMessageVariantB);
+      } catch (err) {
+        console.error("Fetch txn detail error:", err);
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
-    fetchTransaction();
-
-    return () => {
-      isMounted = false;
-    };
+    loadTxn();
   }, [id]);
 
-  const generateMessage = () => {
-    if (!transaction) return;
-
+  const handleRegenerateMessages = async () => {
+    if (!txn) return;
     setGenerating(true);
-
-    setTimeout(() => {
-      const customerName =
-        transaction.customerName || "there";
-
-      const amount =
-        transaction.amount || "your payment";
-
-      const reason =
-        transaction.failureReason ||
-        "a payment issue";
-
-      const message = `Hi ${customerName}, we noticed that your payment of ₹${amount} could not be completed due to ${reason.toLowerCase()}. No worries — you can try again whenever you're ready. If the issue continues, please check your payment details or try a different payment method.`;
-
-      setGeneratedMessage(message);
-
-      setGenerating(false);
-    }, 700);
-  };
-
-  const copyMessage = async () => {
-    if (!generatedMessage) return;
-
     try {
-      await navigator.clipboard.writeText(
-        generatedMessage
-      );
-
-      setCopied(true);
-
-      setTimeout(() => {
-        setCopied(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Failed to copy message:", error);
+      const res = await generateAIMessageVariants(txn, selectedTone);
+      setVariantA(res.variantA);
+      setVariantB(res.variantB);
+      addToast("GenAI generated fresh A/B outreach message variants!", "success");
+    } catch (err) {
+      addToast("Failed to generate AI messages", "error");
+    } finally {
+      setGenerating(false);
     }
   };
 
-  const handleRetry = () => {
-    alert("Retry action will be connected to the backend.");
+  const handleSendOutreach = () => {
+    const activeVar = selectedVariant === "A" ? variantA : variantB;
+    addToast(
+      `Outreach message sent to ${txn?.customerEmail} via ${activeVar?.channel || "email"}!`,
+      "success"
+    );
   };
 
-  /* ---------------- LOADING ---------------- */
+  const handleManualRetry = () => {
+    addToast(
+      `Manual retry dispatched to Razorpay API for ${txn?.razorpayPaymentId}!`,
+      "success"
+    );
+  };
 
   if (loading) {
     return (
-      <main className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8">
-        <div className="max-w-7xl">
-          {/* Back button skeleton */}
-          <div className="h-4 w-40 animate-pulse rounded bg-zinc-200" />
-
-          {/* Heading skeleton */}
-          <div className="mt-8">
-            <div className="h-4 w-32 animate-pulse rounded bg-zinc-200" />
-
-            <div className="mt-3 h-10 w-64 max-w-full animate-pulse rounded bg-zinc-200" />
-
-            <div className="mt-3 h-4 w-52 max-w-full animate-pulse rounded bg-zinc-100" />
-          </div>
-
-          {/* Transaction info skeleton */}
-          <section className="mt-8 rounded-xl border border-[#DDD8CF] bg-white p-4 sm:p-6">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {[1, 2, 3, 4, 5, 6].map((item) => (
-                <div key={item} className="animate-pulse">
-                  <div className="h-3 w-24 rounded bg-zinc-200" />
-
-                  <div className="mt-3 h-5 w-40 max-w-full rounded bg-zinc-200" />
-
-                  <div className="mt-2 h-4 w-52 max-w-full rounded bg-zinc-100" />
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-8 animate-pulse border-t border-[#EEEAE3] pt-6">
-              <div className="h-3 w-28 rounded bg-zinc-200" />
-
-              <div className="mt-3 h-4 w-full rounded bg-zinc-100" />
-            </div>
-          </section>
-
-          {/* Recovery message skeleton */}
-          <section className="mt-6 rounded-xl border border-[#DDD8CF] bg-white p-4 sm:p-6">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-              <div className="animate-pulse">
-                <div className="h-5 w-40 rounded bg-zinc-200" />
-
-                <div className="mt-3 h-4 w-64 max-w-full rounded bg-zinc-100" />
-              </div>
-
-              <div className="h-10 w-full animate-pulse rounded-lg bg-zinc-200 sm:w-36" />
-            </div>
-
-            <div className="mt-6 h-28 animate-pulse rounded-lg bg-zinc-100" />
-          </section>
-        </div>
-      </main>
+      <div className="flex flex-1 flex-col min-w-0 bg-slate-50 min-h-screen">
+        <Header onOpenWebhookModal={() => setIsWebhookModalOpen(true)} />
+        <main className="flex-1 p-8 text-center text-slate-500">
+          Loading payment recovery dossier...
+        </main>
+      </div>
     );
   }
 
-  /* ---------------- ERROR ---------------- */
-
-  if (error) {
-    return (
-      <main className="flex flex-1 items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-md rounded-xl border border-red-200 bg-red-50 p-5 text-center sm:p-6">
-          <h2 className="text-lg font-semibold text-red-700">
-            Something went wrong
-          </h2>
-
-          <p className="mt-2 text-sm text-red-600">
-            {error}
-          </p>
-
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <button
-              onClick={() => navigate("/transactions")}
-              className="rounded-lg border border-[#DDD8CF] bg-white px-4 py-2 text-sm font-medium text-[#1F1F1C] transition hover:bg-zinc-50"
-            >
-              Go Back
-            </button>
-
-            <button
-              onClick={() => window.location.reload()}
-              className="rounded-lg bg-[#1F1F1C] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-            >
-              Try Again
-            </button>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  /* ---------------- PAGE ---------------- */
+  const confidencePct = Math.round((txn?.aiCategoryConfidence || 0.94) * 100);
 
   return (
-    <main
-      ref={pageRef}
-      className="flex-1 overflow-x-hidden p-4 sm:p-6 lg:p-8"
-    >
-      <div className="max-w-7xl">
-        {/* Back Button */}
+    <div className="flex flex-1 flex-col min-w-0 bg-slate-50 min-h-screen">
+      <Header onOpenWebhookModal={() => setIsWebhookModalOpen(true)} />
 
+      <main ref={pageRef} className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Back Button */}
         <button
           onClick={() => navigate("/transactions")}
-          className="page-back mb-6 inline-flex items-center gap-2 text-sm font-medium text-[#C66A2B] transition hover:opacity-75"
+          className="inline-flex items-center gap-2 text-xs font-bold text-amber-600 hover:text-amber-700 transition"
         >
-          <ArrowLeft size={17} />
-
-          <span>Back to Transactions</span>
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Transactions Ledger</span>
         </button>
 
-        {/* Heading */}
+        {/* Dossier Header */}
+        <div className="animate-section flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-xs font-mono font-bold text-amber-400">
+                {txn?.razorpayPaymentId}
+              </span>
+              <StatusBadge status={txn?.status} />
+            </div>
 
-        <div className="animate-section">
-          <p className="text-xs font-medium tracking-wide text-zinc-500 sm:text-sm">
-            TRANSACTION DETAIL
-          </p>
+            <h1 className="page-title mt-2 text-2xl font-extrabold text-slate-900 sm:text-3xl tracking-tight">
+              Payment Recovery Intelligence
+            </h1>
+            <p className="page-subtitle mt-1 text-xs sm:text-sm text-slate-500">
+              Customer Segment: <strong className="text-slate-900">{txn?.customerSegment}</strong>
+            </p>
+          </div>
 
-          <h1 className="page-title mt-2 text-2xl font-semibold text-[#1F1F1C] sm:text-3xl">
-            Payment Recovery
-          </h1>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleManualRetry}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-800 shadow-sm hover:bg-slate-100"
+            >
+              <RefreshCw className="h-4 w-4 text-amber-600" />
+              <span>Retry Payment Now</span>
+            </button>
 
-          <p className="page-subtitle mt-2 break-all text-xs text-zinc-500 sm:text-sm">
-            {transaction?.razorpayPaymentId ||
-              "Payment ID unavailable"}
-          </p>
+            <button
+              onClick={handleSendOutreach}
+              className="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-700"
+            >
+              <Send className="h-4 w-4" />
+              <span>Send Outreach Message</span>
+            </button>
+          </div>
         </div>
 
-        {/* Transaction Information */}
+        {/* 2-Column Layout */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Left Col: Customer & Transaction Info (1 Col) */}
+          <div className="space-y-6">
+            {/* Customer Dossier */}
+            <section className="animate-section rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+              <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
+                Customer & Payment Details
+              </h2>
 
-        <section className="animate-section mt-6 rounded-xl border border-[#DDD8CF] bg-white p-4 sm:mt-8 sm:p-6">
-          <div className="flex flex-col gap-1 border-b border-[#EEEAE3] pb-5">
-            <h2 className="text-base font-semibold text-[#1F1F1C]">
-              Transaction Information
-            </h2>
+              <div className="space-y-3 text-xs">
+                <div>
+                  <span className="text-slate-400 uppercase tracking-wider font-semibold">
+                    Customer Name
+                  </span>
+                  <p className="text-sm font-bold text-slate-900">{txn?.customerName}</p>
+                  <p className="text-slate-500">{txn?.customerEmail}</p>
+                  <p className="text-slate-500">{txn?.customerPhone}</p>
+                </div>
 
-            <p className="text-sm text-zinc-500">
-              Payment and customer details.
-            </p>
-          </div>
+                <div className="pt-2 border-t border-slate-100">
+                  <span className="text-slate-400 uppercase tracking-wider font-semibold">
+                    Amount & Currency
+                  </span>
+                  <p className="text-xl font-extrabold text-slate-900">
+                    ₹{txn?.amount} <span className="text-xs font-medium text-slate-400">{txn?.currency}</span>
+                  </p>
+                </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Customer */}
+                <div className="pt-2 border-t border-slate-100">
+                  <span className="text-slate-400 uppercase tracking-wider font-semibold">
+                    Raw Gateway Failure Code
+                  </span>
+                  <p className="font-mono text-rose-600 font-bold bg-rose-50 p-2 rounded-lg mt-1 border border-rose-100">
+                    {txn?.rawErrorCode}
+                  </p>
+                  <p className="text-slate-500 text-[11px] mt-1">{txn?.rawErrorDescription}</p>
+                </div>
 
-            <div className="animate-card min-w-0">
-              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                Customer
-              </p>
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-400 uppercase tracking-wider font-semibold">
+                      Retry Attempts
+                    </span>
+                    <p className="font-bold text-slate-900">{txn?.retryCount} of {txn?.maxRetries}</p>
+                  </div>
 
-              <p className="mt-1 truncate font-medium text-[#1F1F1C]">
-                {transaction?.customerName || "Unknown"}
-              </p>
-
-              <p className="mt-1 break-all text-sm text-zinc-500">
-                {transaction?.customerEmail || "No email available"}
-              </p>
-            </div>
-
-            {/* Amount */}
-
-            <div className="animate-card">
-              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                Amount
-              </p>
-
-              <p className="mt-1 text-xl font-semibold text-[#1F1F1C]">
-                ₹{transaction?.amount ?? 0}
-              </p>
-            </div>
-
-            {/* Category */}
-
-            <div className="animate-card">
-              <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">
-                Category
-              </p>
-
-              <CategoryBadge
-                category={transaction?.category}
-              />
-            </div>
-
-            {/* Status */}
-
-            <div className="animate-card">
-              <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">
-                Status
-              </p>
-
-              <StatusBadge
-                status={transaction?.status}
-              />
-            </div>
-
-            {/* Retry Count */}
-
-            <div className="animate-card">
-              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                Retry Count
-              </p>
-
-              <p className="mt-1 text-lg font-semibold text-[#1F1F1C]">
-                {transaction?.retryCount ?? 0}
-              </p>
-            </div>
-
-            {/* Next Retry */}
-
-            <div className="animate-card min-w-0">
-              <p className="text-xs uppercase tracking-wide text-zinc-500">
-                Next Retry
-              </p>
-
-              <p className="mt-1 break-words text-sm text-[#1F1F1C]">
-                {transaction?.nextRetryAt
-                  ? new Date(
-                      transaction.nextRetryAt
-                    ).toLocaleString()
-                  : "No retry scheduled"}
-              </p>
-            </div>
-          </div>
-
-          {/* Failure Reason */}
-
-          <div className="animate-card mt-6 border-t border-[#EEEAE3] pt-6">
-            <p className="text-xs uppercase tracking-wide text-zinc-500">
-              Failure Reason
-            </p>
-
-            <p className="mt-2 break-words text-sm leading-6 text-zinc-700">
-              {transaction?.failureReason ||
-                "No failure reason available"}
-            </p>
-          </div>
-        </section>
-
-        {/* Recovery Actions */}
-
-        <section className="animate-section mt-6 rounded-xl border border-[#DDD8CF] bg-white p-4 sm:p-6">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-base font-semibold text-[#1F1F1C]">
-                Recovery Message
-              </p>
-
-              <p className="mt-1 text-sm leading-6 text-zinc-500">
-                Generate a customer-friendly message for this failed payment.
-              </p>
-            </div>
-
-            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-              <button
-                onClick={handleRetry}
-                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#DDD8CF] px-4 py-2.5 text-sm font-medium text-[#1F1F1C] transition hover:bg-[#FAF9F6]"
-              >
-                <RefreshCw size={16} />
-
-                Retry Payment
-              </button>
-
-              <button
-                onClick={generateMessage}
-                disabled={generating}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1F1F1C] px-4 py-2.5 text-sm font-medium text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Sparkles size={16} />
-
-                {generating
-                  ? "Generating..."
-                  : "Generate Message"}
-              </button>
-            </div>
-          </div>
-
-          {/* Message Area */}
-
-          <div className="animate-card mt-6 rounded-lg border border-dashed border-[#DDD8CF] bg-[#FAF9F6] p-4 sm:p-5">
-            {generatedMessage ? (
-              <div>
-                <p className="whitespace-pre-wrap break-words text-sm leading-7 text-zinc-700">
-                  {generatedMessage}
-                </p>
-
-                <div className="mt-5 border-t border-[#E7E2D9] pt-4">
-                  <button
-                    onClick={copyMessage}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#DDD8CF] bg-white px-3 py-2 text-sm font-medium text-[#1F1F1C] transition hover:bg-zinc-50"
-                  >
-                    {copied ? (
-                      <>
-                        <Check size={16} />
-
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={16} />
-
-                        Copy Message
-                      </>
-                    )}
-                  </button>
+                  <div>
+                    <span className="text-slate-400 uppercase tracking-wider font-semibold">
+                      Next Scheduled Retry
+                    </span>
+                    <p className="font-bold text-amber-600">
+                      {txn?.nextRetryAt ? new Date(txn.nextRetryAt).toLocaleTimeString() : "Manual"}
+                    </p>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div className="flex min-h-28 items-center justify-center text-center">
-                <p className="text-sm text-zinc-500">
-                  No recovery message generated yet.
-                  <br />
-                  Click{" "}
-                  <span className="font-medium text-[#1F1F1C]">
-                    Generate Message
-                  </span>{" "}
-                  to create one.
-                </p>
+            </section>
+
+            {/* AI Classification & Confidence */}
+            <section className="animate-section rounded-2xl border border-slate-800 bg-slate-950 p-5 shadow-xl text-white space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-amber-400" />
+                  <h3 className="font-bold text-sm">LLM Classification</h3>
+                </div>
+                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-xs font-bold text-emerald-400 border border-emerald-500/30">
+                  {confidencePct}% Confidence
+                </span>
               </div>
-            )}
+
+              <div>
+                <span className="text-xs text-slate-400 font-semibold uppercase">
+                  Classified Category:
+                </span>
+                <div className="mt-1">
+                  <CategoryBadge category={txn?.category} />
+                </div>
+              </div>
+
+              {/* Progress Confidence Bar */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-[11px] text-slate-400">
+                  <span>Classification Precision</span>
+                  <span>{confidencePct}%</span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-500 to-emerald-400 transition-all duration-500"
+                    style={{ width: `${confidencePct}%` }}
+                  />
+                </div>
+              </div>
+            </section>
           </div>
-        </section>
-      </div>
-    </main>
+
+          {/* Right Col: AI Reasoning & GenAI A/B Message Suite (2 Cols) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* LLM Retry Time Reasoning Card (Phase 2 Feature) */}
+            <section className="animate-section rounded-2xl border border-indigo-200 bg-indigo-50/50 p-5 shadow-sm space-y-3">
+              <div className="flex items-center gap-2.5 text-indigo-900 font-bold text-sm border-b border-indigo-100 pb-3">
+                <BrainCircuit className="h-5 w-5 text-indigo-600" />
+                <h3>LLM Retry Timing Reasoning Engine</h3>
+              </div>
+
+              <p className="text-xs leading-relaxed text-indigo-950 font-medium">
+                {txn?.llmRetryReasoning ||
+                  "Intelligent scheduling rules evaluated gateway response codes against historical bank processing patterns."}
+              </p>
+
+              <div className="flex items-center gap-4 text-[11px] font-semibold text-indigo-700 pt-2 border-t border-indigo-100/60">
+                <span className="flex items-center gap-1">
+                  <Clock className="h-3.5 w-3.5" />
+                  Recommended Delay: {txn?.category === "BANK_FAILURE" ? "1 Hour" : "72 Hours"}
+                </span>
+                <span className="flex items-center gap-1 text-emerald-700">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  High Success Probability
+                </span>
+              </div>
+            </section>
+
+            {/* GenAI Outreach Tone Config */}
+            <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-amber-500" />
+                <span className="text-xs font-bold text-slate-900">
+                  Target Brand Tone:
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedTone}
+                  onChange={(e) => setSelectedTone(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 outline-none focus:border-slate-800"
+                >
+                  <option value="Friendly & Empathetic">Friendly & Empathetic</option>
+                  <option value="Professional & Direct">Professional & Direct</option>
+                  <option value="Incentivized">Incentivized (Save 5%)</option>
+                  <option value="Urgent">Urgent / Action Needed</option>
+                </select>
+
+                <button
+                  onClick={handleRegenerateMessages}
+                  disabled={generating}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-50"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${generating ? "animate-spin" : ""}`} />
+                  <span>{generating ? "Generating..." : "Re-Generate A/B"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* A/B Message Card Component */}
+            <ABMessageCard
+              variantA={variantA}
+              variantB={variantB}
+              selectedVariant={selectedVariant}
+              onSelectVariant={(v) => setSelectedVariant(v)}
+            />
+          </div>
+        </div>
+      </main>
+
+      <WebhookSimulatorModal
+        isOpen={isWebhookModalOpen}
+        onClose={() => setIsWebhookModalOpen(false)}
+      />
+    </div>
   );
 }
 

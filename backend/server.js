@@ -10,6 +10,7 @@ const getRetryStrategy = require("./services/getRetryStrategy");
 const startRetryScheduler = require("./services/retryScheduler");
 const transactionRoutes = require("./routes/transactionRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 app.use(
@@ -109,6 +110,7 @@ if (existingTransaction) {
 );
 // Normal JSON middleware for baaki routes
 app.use(express.json());
+app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 // Health route
 app.use("/api/transactions", transactionRoutes);

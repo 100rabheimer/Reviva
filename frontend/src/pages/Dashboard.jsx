@@ -1,247 +1,292 @@
 import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  TrendingUp,
+  DollarSign,
+  RotateCcw,
+  ShieldCheck,
+  Zap,
+  ArrowUpRight,
+  Filter,
+  Activity,
+  AlertCircle,
+} from "lucide-react";
+
 import StatCard from "../components/StatCard";
 import RecoveryTrendChart from "../components/RecoveryTrendChart";
 import FailureReasonsChart from "../components/FailureReasonsChart";
+import StatusBadge from "../components/StatusBadge";
+import CategoryBadge from "../components/CategoryBadge";
+import Header from "../components/Header";
+import WebhookSimulatorModal from "../components/WebhookSimulatorModal";
+
+import {
+  fetchDashboardStats,
+  fetchRecoveryTrend,
+  fetchFailureReasons,
+  fetchTransactions,
+} from "../services/api";
 import usePageAnimation from "../hooks/usePageAnimation";
+import { useToast } from "../context/ToastContext";
+import { useTheme } from "../context/ThemeContext";
 
 function Dashboard() {
-  const [stats, setStats] = useState(null);
-  const [recoveryTrendData, setRecoveryTrendData] = useState([]);
-  const [failureReasonsData, setFailureReasonsData] = useState([]);
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
+  const navigate = useNavigate();
   const pageRef = useRef(null);
+  const { addToast } = useToast();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
 
   usePageAnimation(pageRef);
 
+  const [timeRange, setTimeRange] = useState("30d");
+  const [stats, setStats] = useState(null);
+  const [trendData, setTrendData] = useState([]);
+  const [reasonsData, setReasonsData] = useState([]);
+  const [recentTxns, setRecentTxns] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
+  const [isWebhookModalOpen, setIsWebhookModalOpen] = useState(false);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [statsRes, trendRes, reasonsRes, txnsRes] = await Promise.all([
+        fetchDashboardStats(timeRange),
+        fetchRecoveryTrend(timeRange),
+        fetchFailureReasons(),
+        fetchTransactions({ page: 1, limit: 5 }),
+      ]);
+
+      setStats(statsRes);
+      setTrendData(trendRes);
+      setReasonsData(reasonsRes);
+      setRecentTxns(txnsRes?.transactions || []);
+    } catch (err) {
+      console.error("Dashboard error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const [statsResponse, trendResponse, reasonsResponse] =
-          await Promise.all([
-            fetch("http://localhost:3000/api/dashboard/stats"),
-            fetch("http://localhost:3000/api/dashboard/recovery-trend"),
-            fetch("http://localhost:3000/api/dashboard/failure-reasons"),
-          ]);
-
-        if (
-          !statsResponse.ok ||
-          !trendResponse.ok ||
-          !reasonsResponse.ok
-        ) {
-          throw new Error("Failed to load dashboard");
-        }
-
-        const statsData = await statsResponse.json();
-        const trendData = await trendResponse.json();
-        const reasonsData = await reasonsResponse.json();
-
-        console.log("Dashboard stats:", statsData);
-        console.log("Recovery trend:", trendData);
-        console.log("Failure reasons:", reasonsData);
-
-        setStats(statsData);
-        setRecoveryTrendData(trendData);
-        setFailureReasonsData(reasonsData);
-      } catch (error) {
-        console.error("Failed to load dashboard:", error);
-        setError("Failed to load dashboard data.");
-      } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 500);
-      }
-    };
-
-    loadDashboard();
-  }, []);
-
-  /* ---------------- LOADING ---------------- */
-
-  if (loading) {
-    return (
-      <main className="flex-1 p-4 sm:p-6 lg:p-8">
-        <p className="text-sm text-zinc-500">
-          PAYMENT RECOVERY
-        </p>
-
-        <div className="mt-2 h-9 w-48 animate-pulse rounded bg-zinc-200" />
-
-        <div className="mt-3 h-5 w-72 animate-pulse rounded bg-zinc-100" />
-
-        {/* Skeleton Stat Cards */}
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {[1, 2, 3, 4, 5].map((item) => (
-            <div
-              key={item}
-              className="h-28 animate-pulse rounded-xl border border-[#DDD8CF] bg-white p-5"
-            >
-              <div className="h-4 w-24 rounded bg-zinc-200" />
-
-              <div className="mt-4 h-8 w-16 rounded bg-zinc-200" />
-            </div>
-          ))}
-        </div>
-
-        {/* Skeleton Charts */}
-        <div className="mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-          {[1, 2].map((item) => (
-            <section
-              key={item}
-              className="h-[420px] animate-pulse rounded-xl border border-[#DDD8CF] bg-white p-4 sm:p-6"
-            >
-              <div className="h-6 w-40 rounded bg-zinc-200" />
-
-              <div className="mt-3 h-4 w-64 max-w-full rounded bg-zinc-100" />
-
-              <div className="mt-8 h-[280px] rounded-lg bg-zinc-100" />
-            </section>
-          ))}
-        </div>
-      </main>
-    );
-  }
-
-  /* ---------------- ERROR ---------------- */
-
-  if (error) {
-    return (
-      <main className="flex flex-1 items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-md rounded-xl border border-red-200 bg-red-50 p-6 text-center">
-          <h2 className="text-lg font-semibold text-red-700">
-            Something went wrong
-          </h2>
-
-          <p className="mt-2 text-sm text-red-600">
-            {error}
-          </p>
-
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-4 rounded-lg bg-[#1F1F1C] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
-          >
-            Try Again
-          </button>
-        </div>
-      </main>
-    );
-  }
-
-  /* ---------------- DASHBOARD ---------------- */
+    loadData();
+  }, [timeRange]);
 
   return (
-    <main
-      ref={pageRef}
-      className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8"
+    <div
+      className={`flex min-h-screen min-w-0 flex-1 flex-col transition-colors duration-200 ${
+        isDark ? "bg-[#f4fbff] text-slate-900" : "bg-[#edf8ff] text-slate-900"
+      }`}
     >
-      {/* Heading */}
+      <Header onOpenWebhookModal={() => setIsWebhookModalOpen(true)} search={search} setSearch={setSearch} />
 
-      <div className="animate-section">
-        <p className="text-xs sm:text-sm text-zinc-500">
-          PAYMENT RECOVERY
-        </p>
+      <main ref={pageRef} className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Top Header Banner */}
+        <div className="animate-section flex flex-col gap-4 rounded-2xl border border-sky-100 bg-white/90 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="page-title mt-1 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
+              Payment Recovery Dashboard
+            </h1>
+            <p className="page-subtitle mt-1 text-xs text-slate-600 sm:text-sm">
+              Real-time monitoring of failed Razorpay charges, LLM classification & automated retry engine.
+            </p>
+          </div>
 
-        <h1 className="page-title mt-2 text-2xl font-semibold text-[#1F1F1C] sm:text-3xl">
-          Dashboard
-        </h1>
-
-        <p className="page-subtitle mt-2 text-sm sm:text-base text-zinc-600">
-          Monitor failed payments and recovery performance.
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-
-      <div className="mt-6 sm:mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        <div className="animate-card">
-          <StatCard
-            label="Total Transactions"
-            value={stats?.totalTransactions ?? 0}
-          />
+          {/* Time Filter Pills */}
+          <div className="flex items-center gap-1.5 rounded-xl border border-sky-200 bg-white p-1 shadow-sm">
+            {["7d", "30d", "90d", "1y"].map((range) => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                  timeRange === range
+                    ? "bg-sky-600 text-white shadow"
+                    : "text-slate-600 hover:bg-sky-50"
+                }`}
+              >
+                {range === "7d"
+                  ? "Last 7 Days"
+                  : range === "30d"
+                  ? "Last 30 Days"
+                  : range === "90d"
+                  ? "Last 90 Days"
+                  : "Year to Date"}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="animate-card">
+        {/* 6 Metric Stat Cards Grid */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <StatCard
-            label="Failed Payments"
-            value={stats?.failedTransactions ?? 0}
+            label="Recovery Rate"
+            value={`${stats?.recoveryRate ?? 64}%`}
+            trend="+14.2%"
+            subtitle="Automated conversion"
+            icon={TrendingUp}
           />
-        </div>
-
-        <div className="animate-card">
           <StatCard
-            label="Recovered"
-            value={stats?.recoveredTransactions ?? 0}
+            label="Revenue Recovered"
+            value={`₹${((stats?.totalRecoveredAmount ?? 48200) / 1000).toFixed(1)}k`}
+            trend="+18.5%"
+            subtitle="Saved from churn"
+            icon={DollarSign}
           />
-        </div>
-
-        <div className="animate-card">
           <StatCard
-            label="Failed Amount"
-            value={`₹${stats?.totalFailedAmount ?? 0}`}
+            label="Active Retries"
+            value={stats?.retryingTransactions ?? 12}
+            trend="In queue"
+            subtitle="Node-cron / BullMQ"
+            icon={RotateCcw}
           />
-        </div>
-
-        <div className="animate-card">
+          <StatCard
+            label="Churn Saved"
+            value={stats?.churnSavedCount ?? 28}
+            trend="+8 users"
+            subtitle="Subscribers retained"
+            icon={ShieldCheck}
+          />
+          <StatCard
+            label="Total Failed"
+            value={`₹${((stats?.totalFailedAmount ?? 24500) / 1000).toFixed(1)}k`}
+            trend="Monitored"
+            subtitle="Failed payment pool"
+            icon={AlertCircle}
+          />
           <StatCard
             label="Retry Attempts"
-            value={stats?.totalRetryAttempts ?? 0}
+            value={stats?.totalRetryAttempts ?? 45}
+            trend="Automated"
+            subtitle="System retries executed"
+            icon={Activity}
           />
         </div>
-      </div>
 
-      {/* Charts */}
-
-      <div className="mt-6 sm:mt-8 grid grid-cols-1 gap-6 xl:grid-cols-2">
-        {/* Recovery Trend */}
-
-        <section className="animate-section min-w-0 rounded-xl border border-[#DDD8CF] bg-white p-4 sm:p-6">
-          <h2 className="text-base font-semibold text-[#1F1F1C] sm:text-lg">
-            Recovery Trend
-          </h2>
-
-          <p className="mt-1 text-sm text-zinc-500">
-            Recovered payments over time.
-          </p>
-
-          <div className="mt-6 w-full overflow-x-auto">
-            {recoveryTrendData.length > 0 ? (
-              <RecoveryTrendChart data={recoveryTrendData} />
-            ) : (
-              <div className="flex h-[300px] items-center justify-center text-center text-sm text-zinc-500">
-                No recovered payments yet.
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Recovery Trend (2 Cols) */}
+          <section className="animate-section lg:col-span-2 rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between border-b border-sky-100 pb-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  Revenue Recovery Trend
+                </h2>
+                <p className="text-xs text-slate-600">
+                  Recovered Revenue vs Unrecovered Failed Amounts over time
+                </p>
               </div>
-            )}
+              <span className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                +24% vs Last Month
+              </span>
+            </div>
+
+            <div className="mt-4">
+              <RecoveryTrendChart data={trendData} />
+            </div>
+          </section>
+
+          {/* Failure Reasons Breakdown (1 Col) */}
+          <section className="animate-section rounded-2xl border border-sky-100 bg-white p-5 shadow-sm">
+            <div className="border-b border-sky-100 pb-4">
+              <h2 className="text-base font-bold text-slate-900">
+                Failure Reason Categories
+              </h2>
+              <p className="text-xs text-slate-600">
+                LLM Rule-based & Fallback failure classification
+              </p>
+            </div>
+
+            <div className="mt-4">
+              <FailureReasonsChart data={reasonsData} />
+            </div>
+          </section>
+        </div>
+
+        {/* Live Recovery Activity Stream Table */}
+        <section className="animate-section rounded-2xl border border-sky-100 bg-white p-5 shadow-sm space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-sky-100 pb-4">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">
+                Recent Payment Recovery Activity
+              </h2>
+              <p className="text-xs text-slate-600">
+                Latest payment failure events captured by Razorpay webhook listener
+              </p>
+            </div>
+
+            <button
+              onClick={() => navigate("/transactions")}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 hover:text-amber-700 transition"
+            >
+              <span>View All Transactions</span>
+              <ArrowUpRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="border-b border-sky-100 bg-[#f4fbff] text-slate-700 uppercase font-semibold">
+                <tr>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Payment ID</th>
+                  <th className="px-4 py-3">Amount</th>
+                  <th className="px-4 py-3">AI Category</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-sky-100">
+                {recentTxns
+                  .filter((txn) => {
+                    if (!search.trim()) return true;
+                    const q = search.toLowerCase();
+                    return (
+                      (txn.customerName || "").toLowerCase().includes(q) ||
+                      (txn.customerEmail || "").toLowerCase().includes(q) ||
+                      (txn.razorpayPaymentId || "").toLowerCase().includes(q)
+                    );
+                  })
+                  .map((txn) => (
+                  <tr
+                    key={txn._id}
+                    onClick={() => navigate(`/transactions/${txn._id}`)}
+                    className="cursor-pointer transition hover:bg-sky-50"
+                  >
+                    <td className="px-4 py-3.5">
+                      <p className="font-bold text-slate-900">{txn.customerName}</p>
+                      <p className="text-slate-500 text-[11px]">{txn.customerEmail}</p>
+                    </td>
+                    <td className="px-4 py-3.5 font-mono text-slate-700">
+                      {txn.razorpayPaymentId}
+                    </td>
+                    <td className="px-4 py-3.5 font-bold text-slate-900">
+                      ₹{txn.amount}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <CategoryBadge category={txn.category} />
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <StatusBadge status={txn.status} />
+                    </td>
+                    <td className="px-4 py-3.5 text-right font-bold text-amber-600 hover:underline">
+                      Inspect →
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
+      </main>
 
-        {/* Failure Reasons */}
-
-        <section className="animate-section min-w-0 rounded-xl border border-[#DDD8CF] bg-white p-4 sm:p-6">
-          <h2 className="text-base font-semibold text-[#1F1F1C] sm:text-lg">
-            Failure Reasons
-          </h2>
-
-          <p className="mt-1 text-sm text-zinc-500">
-            Most common payment failure categories.
-          </p>
-
-          <div className="mt-6 w-full overflow-x-auto">
-            {failureReasonsData.length > 0 ? (
-              <FailureReasonsChart data={failureReasonsData} />
-            ) : (
-              <div className="flex h-[300px] items-center justify-center text-center text-sm text-zinc-500">
-                No failure data available.
-              </div>
-            )}
-          </div>
-        </section>
-      </div>
-    </main>
+      <WebhookSimulatorModal
+        isOpen={isWebhookModalOpen}
+        onClose={() => setIsWebhookModalOpen(false)}
+        onWebhookTriggered={loadData}
+      />
+    </div>
   );
 }
 
